@@ -95,14 +95,58 @@ const mockJobs = [
     type: "Freelance", 
     resumeRequired: false,
     notes: "AI model training tasks"
+  },
+  {
+    id: "9",
+    title: "Remote Job Listings",
+    company: "ZipRecruiter",
+    url: "https://ziprecruiter.com",
+    status: "pending" as const,
+    payRange: "Varies",
+    type: "Various",
+    resumeRequired: true,
+    notes: "Major job board, may require resume"
+  },
+  {
+    id: "10",
+    title: "Hourly Jobs",
+    company: "Snagajob",
+    url: "https://snagajob.com",
+    status: "pending" as const,
+    payRange: "Varies",
+    type: "Part-time/Hourly",
+    resumeRequired: false,
+    notes: "Hourly positions, usually no resume needed"
+  },
+  {
+    id: "11",
+    title: "Gig Work Opportunities",
+    company: "Gig.fish",
+    url: "https://gig.fish",
+    status: "pending" as const,
+    payRange: "Varies",
+    type: "Gig-based",
+    resumeRequired: false,
+    notes: "Gig economy jobs"
+  },
+  {
+    id: "12",
+    title: "Work From Home Jobs",
+    company: "The Work at Home Woman",
+    url: "https://theworkathomewoman.com",
+    status: "pending" as const,
+    payRange: "Varies",
+    type: "Remote",
+    resumeRequired: false,
+    notes: "Curated remote job listings"
   }
 ];
 
 const mockStats = {
-  totalJobs: 47,
-  applied: 12,
-  pending: 8,
-  successRate: 25
+  totalJobs: 12,
+  applied: 0,
+  pending: 12,
+  successRate: 0
 };
 
 const mockSettings = {

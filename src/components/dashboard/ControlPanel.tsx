@@ -4,8 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Play, Pause, Settings, Bot, Mail, Phone } from "lucide-react";
-import { useState } from "react";
+import { ResumeManager } from "./ResumeManager";
+import { Bot, Settings, Play, Pause } from "lucide-react";
 
 interface ControlPanelProps {
   isRunning: boolean;
@@ -20,10 +20,8 @@ interface ControlPanelProps {
 }
 
 export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSettings }: ControlPanelProps) => {
-  const [localSettings, setLocalSettings] = useState(settings);
-
-  const handleSaveSettings = () => {
-    onUpdateSettings(localSettings);
+  const handleResumeUpload = (file: File) => {
+    console.log("Resume uploaded:", file.name);
   };
 
   return (
@@ -32,15 +30,15 @@ export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSetting
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Bot className="h-5 w-5" />
-            AI Agent Control
+            AI Job Agent
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">Automation Status</p>
+              <p className="font-medium">Bot Status</p>
               <p className="text-sm text-muted-foreground">
-                Bot runs {settings.runsPerDay}x daily
+                {isRunning ? "Actively searching and applying" : "Stopped"}
               </p>
             </div>
             <Badge variant={isRunning ? "success" : "secondary"}>
@@ -50,12 +48,48 @@ export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSetting
           
           <Button 
             onClick={onToggleBot}
+            className="w-full"
             variant={isRunning ? "destructive" : "default"}
-            className="w-full flex items-center gap-2"
           >
-            {isRunning ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-            {isRunning ? "Stop Agent" : "Start Agent"}
+            {isRunning ? (
+              <>
+                <Pause className="h-4 w-4 mr-2" />
+                Stop Bot
+              </>
+            ) : (
+              <>
+                <Play className="h-4 w-4 mr-2" />
+                Start Bot
+              </>
+            )}
           </Button>
+          
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="auto-apply">Auto Apply</Label>
+              <Switch 
+                id="auto-apply"
+                checked={settings.autoApply}
+                onCheckedChange={(checked) => 
+                  onUpdateSettings({...settings, autoApply: checked})
+                }
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="runs-per-day">Runs Per Day</Label>
+              <Input
+                id="runs-per-day"
+                type="number"
+                min="1"
+                max="10"
+                value={settings.runsPerDay}
+                onChange={(e) => 
+                  onUpdateSettings({...settings, runsPerDay: parseInt(e.target.value)})
+                }
+              />
+            </div>
+          </div>
         </CardContent>
       </Card>
 
@@ -63,64 +97,45 @@ export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSetting
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Settings className="h-5 w-5" />
-            Settings
+            Contact Settings
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email" className="flex items-center gap-2">
-              <Mail className="h-4 w-4" />
-              Personal Email
-            </Label>
+            <Label htmlFor="email">Email Address</Label>
             <Input
               id="email"
               type="email"
-              value={localSettings.email}
-              onChange={(e) => setLocalSettings({...localSettings, email: e.target.value})}
-              placeholder="your.email@example.com"
+              value={settings.email}
+              onChange={(e) => 
+                onUpdateSettings({...settings, email: e.target.value})
+              }
+              placeholder="your@email.com"
             />
           </div>
-
+          
           <div className="space-y-2">
-            <Label htmlFor="phone" className="flex items-center gap-2">
-              <Phone className="h-4 w-4" />
-              Phone Number
-            </Label>
+            <Label htmlFor="phone">Phone Number</Label>
             <Input
               id="phone"
               type="tel"
-              value={localSettings.phone}
-              onChange={(e) => setLocalSettings({...localSettings, phone: e.target.value})}
+              value={settings.phone}
+              onChange={(e) => 
+                onUpdateSettings({...settings, phone: e.target.value})
+              }
               placeholder="+1 (555) 123-4567"
             />
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="runs">Daily Runs</Label>
-            <Input
-              id="runs"
-              type="number"
-              min="1"
-              max="10"
-              value={localSettings.runsPerDay}
-              onChange={(e) => setLocalSettings({...localSettings, runsPerDay: parseInt(e.target.value)})}
-            />
+          
+          <div className="text-xs text-muted-foreground">
+            Used for job applications and notifications
           </div>
-
-          <div className="flex items-center justify-between">
-            <Label htmlFor="auto-apply">Auto-Apply Mode</Label>
-            <Switch
-              id="auto-apply"
-              checked={localSettings.autoApply}
-              onCheckedChange={(checked) => setLocalSettings({...localSettings, autoApply: checked})}
-            />
-          </div>
-
-          <Button onClick={handleSaveSettings} variant="outline" className="w-full">
-            Save Settings
-          </Button>
         </CardContent>
       </Card>
+
+      <div className="lg:col-span-2">
+        <ResumeManager onResumeUpload={handleResumeUpload} />
+      </div>
     </div>
   );
 };

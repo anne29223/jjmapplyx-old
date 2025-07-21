@@ -11,6 +11,8 @@ interface JobCardProps {
     url: string;
     status: "pending" | "applied" | "rejected" | "no-response";
     appliedAt?: Date;
+    payRange?: string;
+    type?: string;
     contact?: {
       name?: string;
       email?: string;
@@ -60,6 +62,15 @@ export const JobCard = ({ job, onViewSite }: JobCardProps) => {
       </CardHeader>
       
       <CardContent className="pt-0 space-y-4">
+        <div className="flex gap-2">
+          {job.payRange && (
+            <Badge variant="outline">{job.payRange}</Badge>
+          )}
+          {job.type && (
+            <Badge variant="secondary">{job.type}</Badge>
+          )}
+        </div>
+
         {job.appliedAt && (
           <p className="text-sm text-muted-foreground">
             Applied: {job.appliedAt.toLocaleDateString()}
