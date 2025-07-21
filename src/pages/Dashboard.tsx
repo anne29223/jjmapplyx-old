@@ -7,44 +7,94 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Filter } from "lucide-react";
 
-// Mock data - replace with real data later
 const mockJobs = [
   {
     id: "1",
-    title: "Frontend Developer",
-    company: "TechStart Inc",
-    url: "https://example.com/job1",
-    status: "applied" as const,
-    appliedAt: new Date("2024-01-15"),
-    contact: {
-      name: "Sarah Johnson",
-      email: "sarah@techstart.com",
-      phone: "+1 (555) 123-4567"
-    },
+    title: "Typing Jobs From Home",
+    company: "Remote Work From Home / Data Entry",
+    url: "https://typingjobsfromhome.com",
+    status: "pending" as const,
+    payRange: "$27–$53/hr",
+    type: "Full-time or Part-time",
     resumeRequired: false,
-    notes: "No interview process, perfect match for skills"
+    notes: "Data entry position, no resume required"
   },
   {
-    id: "2",
-    title: "React Developer",
-    company: "BuildCorp",
-    url: "https://example.com/job2",
+    id: "2", 
+    title: "Flexible Data Entry",
+    company: "OneGoodGig",
+    url: "https://onegoodgig.com",
     status: "pending" as const,
-    contact: {
-      email: "hr@buildcorp.com"
-    },
-    resumeRequired: true,
-    notes: "Found via automated scan, needs review"
+    payRange: "$100–$400/week",
+    type: "Part-time",
+    resumeRequired: false,
+    notes: "Flexible schedule, weekly pay"
   },
   {
     id: "3",
-    title: "Full Stack Developer",
-    company: "GrowthLabs",
-    url: "https://example.com/job3",
-    status: "no-response" as const,
-    appliedAt: new Date("2024-01-10"),
+    title: "Entry-Level Data Entry", 
+    company: "Sky Limits Remote Jobs",
+    url: "https://skylimitsremotejobs.com",
+    status: "pending" as const,
+    payRange: "$16.50–$34.25/hr",
+    type: "Part-time",
     resumeRequired: false,
-    notes: "Applied 5 days ago, no response yet"
+    notes: "Entry level position"
+  },
+  {
+    id: "4",
+    title: "Focus Group & Survey Tasks",
+    company: "JobConversion.net",
+    url: "https://jobconversion.net",
+    status: "pending" as const,
+    payRange: "Varies",
+    type: "Gig-based",
+    resumeRequired: false,
+    notes: "Survey and focus group tasks"
+  },
+  {
+    id: "5",
+    title: "Transcription & Captioning",
+    company: "TranscribeMe",
+    url: "https://transcribeme.com",
+    status: "pending" as const,
+    payRange: "$15–$22/audio hr",
+    type: "Freelance",
+    resumeRequired: false,
+    notes: "Audio transcription work"
+  },
+  {
+    id: "6",
+    title: "Tutoring (English)",
+    company: "Cambly", 
+    url: "https://cambly.com",
+    status: "pending" as const,
+    payRange: "$10–$12/hr",
+    type: "Flexible",
+    resumeRequired: false,
+    notes: "English tutoring, flexible hours"
+  },
+  {
+    id: "7",
+    title: "Proofreading",
+    company: "ProofreadingServices.com",
+    url: "https://proofreadingservices.com",
+    status: "pending" as const,
+    payRange: "$19–$46/hr", 
+    type: "Freelance",
+    resumeRequired: false,
+    notes: "Freelance proofreading work"
+  },
+  {
+    id: "8",
+    title: "AI Training Tasks",
+    company: "DataAnnotation Tech",
+    url: "https://dataannotation.tech",
+    status: "pending" as const,
+    payRange: "$20/hr",
+    type: "Freelance", 
+    resumeRequired: false,
+    notes: "AI model training tasks"
   }
 ];
 
