@@ -1,8 +1,10 @@
+
 import { useState } from "react";
 import { StatsCards } from "@/components/dashboard/StatsCards";
 import { JobCard } from "@/components/dashboard/JobCard";
 import { ControlPanel } from "@/components/dashboard/ControlPanel";
 import { SiteViewer } from "@/components/dashboard/SiteViewer";
+import { AutomationLogs } from "@/components/dashboard/AutomationLogs";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Filter } from "lucide-react";
@@ -146,14 +148,18 @@ const mockStats = {
   totalJobs: 12,
   applied: 0,
   pending: 12,
-  successRate: 0
+  successRate: 0,
+  automationRuns: 0,
+  webhooksTriggered: 0
 };
 
 const mockSettings = {
   email: "user@example.com",
   phone: "+1 (555) 987-6543",
   runsPerDay: 2,
-  autoApply: true
+  autoApply: true,
+  makeWebhook: "",
+  powerAutomateFlow: ""
 };
 
 export const Dashboard = () => {
@@ -170,6 +176,11 @@ export const Dashboard = () => {
     return matchesSearch && matchesStatus;
   });
 
+  const handleJobApply = async (jobId: string) => {
+    console.log("Triggering automation for job:", jobId);
+    // This will trigger Make.com webhook when backend is connected
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <SiteViewer url={viewingUrl} onClose={() => setViewingUrl(null)} />
@@ -178,7 +189,7 @@ export const Dashboard = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              Job Ninja Dashboard
+              JJMApplyX Dashboard
             </h1>
             <p className="text-muted-foreground">
               AI-powered job application automation
@@ -194,6 +205,8 @@ export const Dashboard = () => {
           settings={settings}
           onUpdateSettings={setSettings}
         />
+
+        <AutomationLogs />
 
         <div className="space-y-4">
           <div className="flex items-center justify-between">
@@ -230,6 +243,7 @@ export const Dashboard = () => {
                 key={job.id}
                 job={job}
                 onViewSite={(url) => setViewingUrl(url)}
+                onApply={() => handleJobApply(job.id)}
               />
             ))}
           </div>

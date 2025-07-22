@@ -1,7 +1,8 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Clock, CheckCircle, XCircle, User, Mail, Phone } from "lucide-react";
+import { ExternalLink, Clock, CheckCircle, XCircle, User, Mail, Phone, Zap } from "lucide-react";
 
 interface JobCardProps {
   job: {
@@ -22,9 +23,10 @@ interface JobCardProps {
     notes?: string;
   };
   onViewSite: (url: string) => void;
+  onApply?: (jobId: string) => void;
 }
 
-export const JobCard = ({ job, onViewSite }: JobCardProps) => {
+export const JobCard = ({ job, onViewSite, onApply }: JobCardProps) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "applied": return "success";
@@ -123,6 +125,17 @@ export const JobCard = ({ job, onViewSite }: JobCardProps) => {
             <ExternalLink className="h-4 w-4" />
             View Site
           </Button>
+          
+          {job.status === "pending" && onApply && (
+            <Button
+              size="sm"
+              onClick={() => onApply(job.id)}
+              className="flex items-center gap-2"
+            >
+              <Zap className="h-4 w-4" />
+              Auto Apply
+            </Button>
+          )}
         </div>
       </CardContent>
     </Card>

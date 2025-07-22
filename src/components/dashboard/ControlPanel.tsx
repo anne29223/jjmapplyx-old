@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -5,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { ResumeManager } from "./ResumeManager";
-import { Bot, Settings, Play, Pause } from "lucide-react";
+import { Bot, Settings, Play, Pause, Webhook, Zap } from "lucide-react";
 
 interface ControlPanelProps {
   isRunning: boolean;
@@ -15,6 +16,8 @@ interface ControlPanelProps {
     phone: string;
     runsPerDay: number;
     autoApply: boolean;
+    makeWebhook?: string;
+    powerAutomateFlow?: string;
   };
   onUpdateSettings: (settings: any) => void;
 }
@@ -30,13 +33,13 @@ export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSetting
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Bot className="h-5 w-5" />
-            AI Job Agent
+            JJMApplyX AI Agent
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">Bot Status</p>
+              <p className="font-medium">Automation Status</p>
               <p className="text-sm text-muted-foreground">
                 {isRunning ? "Actively searching and applying" : "Stopped"}
               </p>
@@ -54,12 +57,12 @@ export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSetting
             {isRunning ? (
               <>
                 <Pause className="h-4 w-4 mr-2" />
-                Stop Bot
+                Stop Automation
               </>
             ) : (
               <>
                 <Play className="h-4 w-4 mr-2" />
-                Start Bot
+                Start Automation
               </>
             )}
           </Button>
@@ -89,6 +92,48 @@ export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSetting
                 }
               />
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="border-border">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Zap className="h-5 w-5" />
+            Automation Integration
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="make-webhook">Make.com Webhook URL</Label>
+            <Input
+              id="make-webhook"
+              type="url"
+              value={settings.makeWebhook || ""}
+              onChange={(e) => 
+                onUpdateSettings({...settings, makeWebhook: e.target.value})
+              }
+              placeholder="https://hook.make.com/..."
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="power-automate">Power Automate Flow URL</Label>
+            <Input
+              id="power-automate"
+              type="url"
+              value={settings.powerAutomateFlow || ""}
+              onChange={(e) => 
+                onUpdateSettings({...settings, powerAutomateFlow: e.target.value})
+              }
+              placeholder="https://prod-XX.westus.logic.azure.com..."
+            />
+          </div>
+          
+          <div className="text-xs text-muted-foreground space-y-1">
+            <p>• Make.com handles job scraping and triggers</p>
+            <p>• Power Automate executes browser automation</p>
+            <p>• Connect both for full automation pipeline</p>
           </div>
         </CardContent>
       </Card>
