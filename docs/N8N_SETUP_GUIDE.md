@@ -1,4 +1,4 @@
-# n8n Integration Setup Guide for JJMapplyx
+A# n8n Integration Setup Guide for JJMapplyx
 
 This guide will help you set up n8n automation workflows to power your job application automation.
 
