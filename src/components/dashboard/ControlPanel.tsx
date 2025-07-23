@@ -34,6 +34,21 @@ export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSetting
   const { mutate: updateSettings } = useUpdateSettings();
   const { mutate: triggerN8N } = useTriggerN8N();
 
+  // Provide default values if settings is null
+  const safeSettings = settings || {
+    email: '',
+    phone: '',
+    runsPerDay: 5,
+    runs_per_day: 5,
+    autoApply: false,
+    auto_apply: false,
+    makeWebhook: '',
+    webhook_make: '',
+    powerAutomateFlow: '',
+    webhook_power_automate: '',
+    n8n_webhook_url: ''
+  };
+
   const handleSettingsUpdate = (newSettings: any) => {
     updateSettings(newSettings, {
       onSuccess: () => {
@@ -122,9 +137,9 @@ export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSetting
               <Label htmlFor="auto-apply">Auto Apply</Label>
               <Switch 
                 id="auto-apply"
-                checked={settings.autoApply || (settings as any).auto_apply || false}
+                checked={safeSettings.autoApply || safeSettings.auto_apply || false}
                 onCheckedChange={(checked) => 
-                  handleSettingsUpdate({...settings, auto_apply: checked, autoApply: checked})
+                  handleSettingsUpdate({...safeSettings, auto_apply: checked, autoApply: checked})
                 }
               />
             </div>
@@ -136,9 +151,9 @@ export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSetting
                 type="number"
                 min="1"
                 max="10"
-                value={settings.runsPerDay || (settings as any).runs_per_day || 5}
+                value={safeSettings.runsPerDay || safeSettings.runs_per_day || 5}
                 onChange={(e) => 
-                  handleSettingsUpdate({...settings, runs_per_day: parseInt(e.target.value), runsPerDay: parseInt(e.target.value)})
+                  handleSettingsUpdate({...safeSettings, runs_per_day: parseInt(e.target.value), runsPerDay: parseInt(e.target.value)})
                 }
               />
             </div>
@@ -159,9 +174,9 @@ export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSetting
               <Input
                 id="n8n-webhook"
                 placeholder="https://your-n8n-instance.com/webhook/..."
-                value={(settings as any).n8n_webhook_url || ""}
+                value={safeSettings.n8n_webhook_url || ""}
                 onChange={(e) =>
-                  handleSettingsUpdate({ ...settings, n8n_webhook_url: e.target.value })
+                  handleSettingsUpdate({ ...safeSettings, n8n_webhook_url: e.target.value })
                 }
               />
               <p className="text-xs text-muted-foreground">
@@ -191,9 +206,9 @@ export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSetting
               <Input
                 id="make-webhook"
                 type="url"
-                value={settings.makeWebhook || (settings as any).webhook_make || ""}
+                value={safeSettings.makeWebhook || safeSettings.webhook_make || ""}
                 onChange={(e) => 
-                  handleSettingsUpdate({...settings, webhook_make: e.target.value, makeWebhook: e.target.value})
+                  handleSettingsUpdate({...safeSettings, webhook_make: e.target.value, makeWebhook: e.target.value})
                 }
                 placeholder="https://hook.make.com/..."
               />
@@ -204,9 +219,9 @@ export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSetting
               <Input
                 id="power-automate"
                 type="url"
-                value={settings.powerAutomateFlow || (settings as any).webhook_power_automate || ""}
+                value={safeSettings.powerAutomateFlow || safeSettings.webhook_power_automate || ""}
                 onChange={(e) => 
-                  handleSettingsUpdate({...settings, webhook_power_automate: e.target.value, powerAutomateFlow: e.target.value})
+                  handleSettingsUpdate({...safeSettings, webhook_power_automate: e.target.value, powerAutomateFlow: e.target.value})
                 }
                 placeholder="https://prod-XX.westus.logic.azure.com..."
               />
@@ -233,9 +248,9 @@ export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSetting
             <Input
               id="email"
               type="email"
-              value={settings.email}
+              value={safeSettings.email}
               onChange={(e) => 
-                handleSettingsUpdate({...settings, email: e.target.value})
+                handleSettingsUpdate({...safeSettings, email: e.target.value})
               }
               placeholder="your@email.com"
             />
@@ -246,9 +261,9 @@ export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSetting
             <Input
               id="phone"
               type="tel"
-              value={settings.phone}
+              value={safeSettings.phone}
               onChange={(e) => 
-                handleSettingsUpdate({...settings, phone: e.target.value})
+                handleSettingsUpdate({...safeSettings, phone: e.target.value})
               }
               placeholder="+1 (555) 123-4567"
             />
