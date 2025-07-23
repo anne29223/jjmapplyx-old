@@ -1,0 +1,110 @@
+{
+  "name": "Email Monitoring Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "schedule-trigger",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "protocol": "imap",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oauth2",
+        "options": {
+          "allowUnauthorizedCerts": false,
+          "readOnly": true,
+          "markSeen": false
+        }
+      },
+      "id": "email-imap",
+      "name": "Email IMAP",
+      "type": "n8n-nodes-base.emailReadImap",
+      "typeVersion": 2,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Filter and analyze emails for job-related content\nconst items = $input.all();\nconst jobEmails = [];\n\nfor (const item of items) {\n  const subject = item.json.subject?.toLowerCase() || '';\n  const from = item.json.from?.toLowerCase() || '';\n  const body = item.json.text?.toLowerCase() || '';\n  \n  // Keywords that indicate job-related emails\n  const interviewKeywords = ['interview', 'meeting', 'call', 'schedule', 'available'];\n  const rejectionKeywords = ['unfortunately', 'not selected', 'other candidates', 'position has been filled'];\n  const applicationKeywords = ['application', 'received', 'thank you for applying'];\n  \n  let emailType = 'unknown';\n  \n  if (interviewKeywords.some(keyword => subject.includes(keyword) || body.includes(keyword))) {\n    emailType = 'interview';\n  } else if (rejectionKeywords.some(keyword => subject.includes(keyword) || body.includes(keyword))) {\n    emailType = 'rejection';\n  } else if (applicationKeywords.some(keyword => subject.includes(keyword) || body.includes(keyword))) {\n    emailType = 'confirmation';\n  }\n  \n  // Only process job-related emails\n  if (emailType !== 'unknown') {\n    jobEmails.push({\n      json: {\n        ...item.json,\n        emailType: emailType,\n        processedAt: new Date().toISOString()\n      }\n    });\n  }\n}\n\nreturn jobEmails;"
+      },
+      "id": "analyze-emails",
+      "name": "Analyze Emails",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "YOUR_JJMAPPLYX_URL/functions/v1/n8n-webhook",
+        "body": {
+          "action": "interview-detected",
+          "data": "={{$json}}"
+        },
+        "options": {
+          "headers": {
+            "Content-Type": "application/json"
+          }
+        }
+      },
+      "id": "send-to-jjmapplyx",
+      "name": "Send to JJMapplyx",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [850, 300]
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Email IMAP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email IMAP": {
+      "main": [
+        [
+          {
+            "node": "Analyze Emails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze Emails": {
+      "main": [
+        [
+          {
+            "node": "Send to JJMapplyx",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {},
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2024-01-01T00:00:00.000Z",
+  "versionId": "1"
+}

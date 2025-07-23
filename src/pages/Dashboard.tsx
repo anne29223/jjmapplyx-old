@@ -5,6 +5,11 @@ import { JobCard } from "@/components/dashboard/JobCard";
 import { ControlPanel } from "@/components/dashboard/ControlPanel";
 import { SiteViewer } from "@/components/dashboard/SiteViewer";
 import { AutomationLogs } from "@/components/dashboard/AutomationLogs";
+import { TestWebhook } from "@/components/dashboard/TestWebhook";
+import { JobSiteConfig } from "@/components/dashboard/JobSiteConfig";
+import { Analytics } from "@/components/dashboard/Analytics";
+import { ExportImport } from "@/components/dashboard/ExportImport";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Filter } from "lucide-react";
@@ -227,16 +232,30 @@ export const Dashboard = () => {
 
         <StatsCards stats={stats} />
 
-        <ControlPanel
-          isRunning={isAgentRunning}
-          onToggleBot={() => setIsAgentRunning(!isAgentRunning)}
-          settings={settings}
-          onUpdateSettings={() => {}} // Handled in ControlPanel via useUpdateSettings
-        />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <ControlPanel
+              isRunning={isAgentRunning}
+              onToggleBot={() => setIsAgentRunning(!isAgentRunning)}
+              settings={settings}
+              onUpdateSettings={() => {}} // Handled in ControlPanel via useUpdateSettings
+            />
+          </div>
+          <div className="space-y-6">
+            <AutomationLogs />
+            <TestWebhook />
+          </div>
+        </div>
 
-        <AutomationLogs />
+        <Tabs defaultValue="jobs" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="jobs">Job Applications</TabsTrigger>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            <TabsTrigger value="settings">Site Config</TabsTrigger>
+            <TabsTrigger value="data">Export/Import</TabsTrigger>
+          </TabsList>
 
-        <div className="space-y-4">
+          <TabsContent value="jobs" className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-semibold">Job Applications</h2>
             <div className="flex gap-3">
@@ -281,7 +300,20 @@ export const Dashboard = () => {
               <p className="text-muted-foreground">No jobs found matching your criteria.</p>
             </div>
           )}
-        </div>
+          </TabsContent>
+
+          <TabsContent value="analytics">
+            <Analytics />
+          </TabsContent>
+
+          <TabsContent value="settings">
+            <JobSiteConfig />
+          </TabsContent>
+
+          <TabsContent value="data">
+            <ExportImport />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

@@ -57,7 +57,7 @@ export const ResumeManager = ({ onResumeUpload }: ResumeManagerProps) => {
             <div className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
               <span className="text-sm font-medium">{uploadedResume.name}</span>
-              <Badge variant="success">Ready</Badge>
+              <Badge variant="secondary">Ready</Badge>
             </div>
             <Button size="sm" variant="ghost" onClick={removeResume}>
               <X className="h-4 w-4" />

@@ -1,0 +1,210 @@
+{
+  "name": "Auto Apply Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "auto-apply",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "auto-apply-webhook"
+    },
+    {
+      "parameters": {
+        "url": "={{$json.jobUrl}}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "load-job-page",
+      "name": "Load Job Page",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Check if application is possible\nconst html = $input.first().json.body;\nconst jobData = $input.first().json;\n\n// Look for application buttons/links\nconst applyButtonRegex = /(apply|submit|join)/i;\nconst hasApplyButton = applyButtonRegex.test(html);\n\n// Check if resume is required\nconst resumeRequired = /resume|cv|upload.*file/i.test(html);\n\n// Check if it's an external redirect\nconst isExternal = html.includes('external-apply') || html.includes('redirect');\n\nreturn [{\n  json: {\n    ...jobData,\n    canApply: hasApplyButton && !isExternal,\n    resumeRequired: resumeRequired,\n    requiresManualReview: isExternal\n  }\n}];"
+      },
+      "id": "analyze-application",
+      "name": "Analyze Application",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{$json.canApply}}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equal"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "can-apply-check",
+      "name": "Can Apply?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "YOUR_JJMAPPLYX_URL/functions/v1/n8n-webhook",
+        "body": {
+          "action": "application-submitted",
+          "data": {
+            "jobId": "={{$json.jobId}}",
+            "status": "applied",
+            "appliedAt": "={{new Date().toISOString()}}"
+          }
+        },
+        "options": {
+          "headers": {
+            "Content-Type": "application/json"
+          }
+        }
+      },
+      "id": "report-success",
+      "name": "Report Success",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1050, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "YOUR_JJMAPPLYX_URL/functions/v1/n8n-webhook",
+        "body": {
+          "action": "application-failed",
+          "data": {
+            "jobId": "={{$json.jobId}}",
+            "status": "failed",
+            "reason": "Cannot auto-apply"
+          }
+        },
+        "options": {
+          "headers": {
+            "Content-Type": "application/json"
+          }
+        }
+      },
+      "id": "report-failure",
+      "name": "Report Failure",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1050, 400]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\"success\": true, \"message\": \"Application processed\"}"
+      },
+      "id": "response",
+      "name": "Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1250, 300]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Load Job Page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Job Page": {
+      "main": [
+        [
+          {
+            "node": "Analyze Application",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze Application": {
+      "main": [
+        [
+          {
+            "node": "Can Apply?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Can Apply?": {
+      "main": [
+        [
+          {
+            "node": "Report Success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Report Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Report Success": {
+      "main": [
+        [
+          {
+            "node": "Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Report Failure": {
+      "main": [
+        [
+          {
+            "node": "Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {},
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2024-01-01T00:00:00.000Z",
+  "versionId": "1"
+}
