@@ -6,7 +6,9 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { ResumeManager } from "./ResumeManager";
-import { Bot, Settings, Play, Pause, Webhook, Zap } from "lucide-react";
+import { Bot, Settings, Play, Pause, Webhook, Zap, Mail } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useUpdateSettings, useTriggerN8N } from "@/hooks/useSupabase";
 
 interface ControlPanelProps {
   isRunning: boolean;
@@ -14,17 +16,65 @@ interface ControlPanelProps {
   settings: {
     email: string;
     phone: string;
-    runsPerDay: number;
-    autoApply: boolean;
+    runsPerDay?: number;
+    runs_per_day?: number;
+    autoApply?: boolean;
+    auto_apply?: boolean;
     makeWebhook?: string;
+    webhook_make?: string;
     powerAutomateFlow?: string;
+    webhook_power_automate?: string;
+    n8n_webhook_url?: string;
   };
   onUpdateSettings: (settings: any) => void;
 }
 
 export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSettings }: ControlPanelProps) => {
+  const { toast } = useToast();
+  const { mutate: updateSettings } = useUpdateSettings();
+  const { mutate: triggerN8N } = useTriggerN8N();
+
+  const handleSettingsUpdate = (newSettings: any) => {
+    updateSettings(newSettings, {
+      onSuccess: () => {
+        onUpdateSettings(newSettings);
+        toast({
+          title: "Settings Updated",
+          description: "Your settings have been saved successfully.",
+        });
+      },
+      onError: (error) => {
+        toast({
+          title: "Error",
+          description: "Failed to update settings.",
+          variant: "destructive"
+        });
+      }
+    });
+  };
+
+  const handleStartN8NWorkflow = async (workflow: string) => {
+    try {
+      await triggerN8N({ workflow });
+      toast({
+        title: "n8n Workflow Started",
+        description: `${workflow} automation is now running.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to start n8n workflow. Check your webhook URL.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const handleResumeUpload = (file: File) => {
     console.log("Resume uploaded:", file.name);
+    toast({
+      title: "Resume Uploaded",
+      description: `${file.name} has been uploaded successfully.`,
+    });
   };
 
   return (
@@ -72,9 +122,9 @@ export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSetting
               <Label htmlFor="auto-apply">Auto Apply</Label>
               <Switch 
                 id="auto-apply"
-                checked={settings.autoApply}
+                checked={settings.autoApply || (settings as any).auto_apply || false}
                 onCheckedChange={(checked) => 
-                  onUpdateSettings({...settings, autoApply: checked})
+                  handleSettingsUpdate({...settings, auto_apply: checked, autoApply: checked})
                 }
               />
             </div>
@@ -86,9 +136,9 @@ export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSetting
                 type="number"
                 min="1"
                 max="10"
-                value={settings.runsPerDay}
+                value={settings.runsPerDay || (settings as any).runs_per_day || 5}
                 onChange={(e) => 
-                  onUpdateSettings({...settings, runsPerDay: parseInt(e.target.value)})
+                  handleSettingsUpdate({...settings, runs_per_day: parseInt(e.target.value), runsPerDay: parseInt(e.target.value)})
                 }
               />
             </div>
@@ -96,47 +146,79 @@ export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSetting
         </CardContent>
       </Card>
 
-      <Card className="border-border">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Zap className="h-5 w-5" />
-            Automation Integration
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="make-webhook">Make.com Webhook URL</Label>
-            <Input
-              id="make-webhook"
-              type="url"
-              value={settings.makeWebhook || ""}
-              onChange={(e) => 
-                onUpdateSettings({...settings, makeWebhook: e.target.value})
-              }
-              placeholder="https://hook.make.com/..."
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="power-automate">Power Automate Flow URL</Label>
-            <Input
-              id="power-automate"
-              type="url"
-              value={settings.powerAutomateFlow || ""}
-              onChange={(e) => 
-                onUpdateSettings({...settings, powerAutomateFlow: e.target.value})
-              }
-              placeholder="https://prod-XX.westus.logic.azure.com..."
-            />
-          </div>
-          
-          <div className="text-xs text-muted-foreground space-y-1">
-            <p>• Make.com handles job scraping and triggers</p>
-            <p>• Power Automate executes browser automation</p>
-            <p>• Connect both for full automation pipeline</p>
-          </div>
-        </CardContent>
-      </Card>
+        <Card className="border-border">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Webhook className="h-5 w-5" />
+              n8n Automation Integration
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="n8n-webhook">n8n Webhook URL</Label>
+              <Input
+                id="n8n-webhook"
+                placeholder="https://your-n8n-instance.com/webhook/..."
+                value={(settings as any).n8n_webhook_url || ""}
+                onChange={(e) =>
+                  handleSettingsUpdate({ ...settings, n8n_webhook_url: e.target.value })
+                }
+              />
+              <p className="text-xs text-muted-foreground">
+                This webhook will receive job application triggers from the dashboard
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button 
+                size="sm" 
+                variant="outline"
+                onClick={() => handleStartN8NWorkflow('job-scraping')}
+              >
+                <Zap className="h-4 w-4 mr-2" />
+                Start Job Scraping
+              </Button>
+              <Button 
+                size="sm" 
+                variant="outline"
+                onClick={() => handleStartN8NWorkflow('email-monitoring')}
+              >
+                <Mail className="h-4 w-4 mr-2" />
+                Start Email Monitor
+              </Button>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="make-webhook">Make.com Webhook URL (Legacy)</Label>
+              <Input
+                id="make-webhook"
+                type="url"
+                value={settings.makeWebhook || (settings as any).webhook_make || ""}
+                onChange={(e) => 
+                  handleSettingsUpdate({...settings, webhook_make: e.target.value, makeWebhook: e.target.value})
+                }
+                placeholder="https://hook.make.com/..."
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="power-automate">Power Automate Flow URL (Legacy)</Label>
+              <Input
+                id="power-automate"
+                type="url"
+                value={settings.powerAutomateFlow || (settings as any).webhook_power_automate || ""}
+                onChange={(e) => 
+                  handleSettingsUpdate({...settings, webhook_power_automate: e.target.value, powerAutomateFlow: e.target.value})
+                }
+                placeholder="https://prod-XX.westus.logic.azure.com..."
+              />
+            </div>
+            
+            <div className="text-xs text-muted-foreground space-y-1">
+              <p>• n8n provides complete automation workflow management</p>
+              <p>• Make.com & Power Automate available for legacy support</p>
+              <p>• Configure n8n webhook for advanced job automation</p>
+            </div>
+          </CardContent>
+        </Card>
 
       <Card className="border-border">
         <CardHeader>
@@ -153,7 +235,7 @@ export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSetting
               type="email"
               value={settings.email}
               onChange={(e) => 
-                onUpdateSettings({...settings, email: e.target.value})
+                handleSettingsUpdate({...settings, email: e.target.value})
               }
               placeholder="your@email.com"
             />
@@ -166,7 +248,7 @@ export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSetting
               type="tel"
               value={settings.phone}
               onChange={(e) => 
-                onUpdateSettings({...settings, phone: e.target.value})
+                handleSettingsUpdate({...settings, phone: e.target.value})
               }
               placeholder="+1 (555) 123-4567"
             />

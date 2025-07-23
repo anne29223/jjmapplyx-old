@@ -8,6 +8,8 @@ import { AutomationLogs } from "@/components/dashboard/AutomationLogs";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Filter } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useJobs, useAutomationStats, useUserSettings, useTriggerN8N } from "@/hooks/useSupabase";
 
 const mockJobs = [
   {
@@ -165,11 +167,17 @@ const mockSettings = {
 export const Dashboard = () => {
   const [viewingUrl, setViewingUrl] = useState<string | null>(null);
   const [isAgentRunning, setIsAgentRunning] = useState(false);
-  const [settings, setSettings] = useState(mockSettings);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const { toast } = useToast();
 
-  const filteredJobs = mockJobs.filter(job => {
+  // Use real Supabase data
+  const { data: jobs = [], isLoading: jobsLoading } = useJobs();
+  const { data: stats = mockStats } = useAutomationStats();
+  const { data: settings = mockSettings } = useUserSettings();
+  const { mutate: triggerN8N } = useTriggerN8N();
+
+  const filteredJobs = (jobs.length > 0 ? jobs : mockJobs).filter((job: any) => {
     const matchesSearch = job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          job.company.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === "all" || job.status === statusFilter;
@@ -177,8 +185,28 @@ export const Dashboard = () => {
   });
 
   const handleJobApply = async (jobId: string) => {
-    console.log("Triggering automation for job:", jobId);
-    // This will trigger Make.com webhook when backend is connected
+    console.log("Triggering n8n auto-apply for job:", jobId);
+    
+    const job = (jobs.length > 0 ? jobs : mockJobs).find((j: any) => j.id === jobId);
+    if (!job) return;
+
+    try {
+      await triggerN8N({
+        workflow: 'job-application',
+        jobData: job
+      });
+
+      toast({
+        title: "n8n Workflow Triggered",
+        description: `Auto-apply workflow started for ${job.title} at ${job.company}`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to trigger n8n workflow. Check your settings.",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -197,13 +225,13 @@ export const Dashboard = () => {
           </div>
         </div>
 
-        <StatsCards stats={mockStats} />
+        <StatsCards stats={stats} />
 
         <ControlPanel
           isRunning={isAgentRunning}
           onToggleBot={() => setIsAgentRunning(!isAgentRunning)}
           settings={settings}
-          onUpdateSettings={setSettings}
+          onUpdateSettings={() => {}} // Handled in ControlPanel via useUpdateSettings
         />
 
         <AutomationLogs />

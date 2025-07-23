@@ -2,6 +2,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Clock, CheckCircle, XCircle, Zap } from "lucide-react";
+import { useAutomationLogs } from "@/hooks/useSupabase";
 
 const mockLogs = [
   {
@@ -31,6 +32,7 @@ const mockLogs = [
 ];
 
 export const AutomationLogs = () => {
+  const { data: logs = [], isLoading } = useAutomationLogs();
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "success": return <CheckCircle className="h-4 w-4 text-success" />;
@@ -57,31 +59,36 @@ export const AutomationLogs = () => {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {mockLogs.map((log) => (
-            <div key={log.id} className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-              <div className="flex-shrink-0 mt-0.5">
-                {getStatusIcon(log.status)}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <p className="font-medium text-sm">{log.action}</p>
-                  <Badge variant={getStatusColor(log.status) as any} className="text-xs">
-                    {log.status}
-                  </Badge>
-                </div>
-                <p className="text-sm text-muted-foreground">{log.details}</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {log.timestamp.toLocaleTimeString()}
-                </p>
-              </div>
+          {isLoading ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Zap className="h-8 w-8 mx-auto mb-2 opacity-50 animate-spin" />
+              <p>Loading automation logs...</p>
             </div>
-          ))}
-          
-          {mockLogs.length === 0 && (
+          ) : logs.length > 0 ? (
+            logs.map((log: any) => (
+              <div key={log.id} className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
+                <div className="flex-shrink-0 mt-0.5">
+                  {getStatusIcon(log.status)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <p className="font-medium text-sm">{log.action}</p>
+                    <Badge variant={getStatusColor(log.status) as any} className="text-xs">
+                      {log.status}
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground">{log.details}</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {new Date(log.created_at).toLocaleTimeString()}
+                  </p>
+                </div>
+              </div>
+            ))
+          ) : (
             <div className="text-center py-8 text-muted-foreground">
               <Zap className="h-8 w-8 mx-auto mb-2 opacity-50" />
               <p>No automation activity yet</p>
-              <p className="text-sm">Start the bot to see logs here</p>
+              <p className="text-sm">Configure n8n webhooks and start automation to see logs</p>
             </div>
           )}
         </div>
