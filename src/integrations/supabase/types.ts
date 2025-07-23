@@ -134,6 +134,33 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_settings: {
         Row: {
           auto_apply: boolean | null
@@ -144,7 +171,7 @@ export type Database = {
           phone: string | null
           runs_per_day: number | null
           updated_at: string
-          user_id: string | null
+          user_id: string
           webhook_make: string | null
           webhook_power_automate: string | null
         }
@@ -157,7 +184,7 @@ export type Database = {
           phone?: string | null
           runs_per_day?: number | null
           updated_at?: string
-          user_id?: string | null
+          user_id: string
           webhook_make?: string | null
           webhook_power_automate?: string | null
         }
@@ -170,7 +197,7 @@ export type Database = {
           phone?: string | null
           runs_per_day?: number | null
           updated_at?: string
-          user_id?: string | null
+          user_id?: string
           webhook_make?: string | null
           webhook_power_automate?: string | null
         }

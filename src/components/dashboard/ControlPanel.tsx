@@ -9,6 +9,7 @@ import { ResumeManager } from "./ResumeManager";
 import { Bot, Settings, Play, Pause, Webhook, Zap, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useUpdateSettings, useTriggerN8N } from "@/hooks/useSupabase";
+import { validateEmail, validateWebhookUrl, validatePhoneNumber, validateRunsPerDay, sanitizeInput } from "@/lib/validation";
 
 interface ControlPanelProps {
   isRunning: boolean;

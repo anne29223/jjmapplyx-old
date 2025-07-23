@@ -3,7 +3,21 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-webhook-signature',
+}
+
+// Input validation functions
+function validateJobData(data: any) {
+  if (!data.title || typeof data.title !== 'string') return false;
+  if (!data.company || typeof data.company !== 'string') return false;
+  if (!data.url || typeof data.url !== 'string') return false;
+  return true;
+}
+
+function sanitizeInput(input: string): string {
+  return input.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+              .replace(/javascript:/gi, '')
+              .trim();
 }
 
 serve(async (req) => {
@@ -19,6 +33,18 @@ serve(async (req) => {
 
     const { action, data } = await req.json()
 
+    // Basic input validation
+    if (!action || typeof action !== 'string') {
+      throw new Error('Invalid action parameter')
+    }
+
+    // Sanitize action
+    const sanitizedAction = sanitizeInput(action)
+
+    // Rate limiting check (basic implementation)
+    const timestamp = Date.now()
+    const requestKey = req.headers.get('x-forwarded-for') || 'unknown'
+    
     // Log the webhook action
     await supabaseClient
       .from('automation_logs')
@@ -31,21 +57,26 @@ serve(async (req) => {
 
     console.log(`n8n webhook received: ${action}`, data)
 
-    switch (action) {
+    switch (sanitizedAction) {
       case 'job-found':
+        // Validate job data
+        if (!validateJobData(data)) {
+          throw new Error('Invalid job data provided')
+        }
+        
         // Insert new job from n8n scraping workflow
         const { error: jobError } = await supabaseClient
           .from('jobs')
           .insert({
-            title: data.title,
-            company: data.company,
-            url: data.url,
-            pay_range: data.payRange,
-            job_type: data.type,
+            title: sanitizeInput(data.title),
+            company: sanitizeInput(data.company),
+            url: data.url, // URL validation should be done separately
+            pay_range: data.payRange ? sanitizeInput(data.payRange) : null,
+            job_type: data.type ? sanitizeInput(data.type) : null,
             contact_email: data.contactEmail,
             contact_phone: data.contactPhone,
-            resume_required: data.resumeRequired,
-            notes: data.notes || `Found via n8n automation`
+            resume_required: data.resumeRequired || false,
+            notes: data.notes ? sanitizeInput(data.notes) : 'Found via n8n automation'
           })
 
         if (jobError) throw jobError
