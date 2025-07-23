@@ -94,7 +94,7 @@ export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSetting
                 {isRunning ? "Actively searching and applying" : "Stopped"}
               </p>
             </div>
-            <Badge variant={isRunning ? "success" : "secondary"}>
+            <Badge variant={isRunning ? "default" : "secondary"}>
               {isRunning ? "Running" : "Stopped"}
             </Badge>
           </div>
