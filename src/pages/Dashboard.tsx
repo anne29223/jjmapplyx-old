@@ -12,9 +12,11 @@ import { ExportImport } from "@/components/dashboard/ExportImport";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Filter } from "lucide-react";
+import { Search, Filter, LogOut } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useJobs, useAutomationStats, useUserSettings, useTriggerN8N } from "@/hooks/useSupabase";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
 
 const mockJobs = [
   {
@@ -175,6 +177,7 @@ export const Dashboard = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const { toast } = useToast();
+  const { signOut } = useAuth();
 
   // Use real Supabase data
   const { data: jobs = [], isLoading: jobsLoading } = useJobs();
@@ -228,6 +231,10 @@ export const Dashboard = () => {
               AI-powered job application automation
             </p>
           </div>
+          <Button variant="outline" onClick={signOut} className="flex items-center gap-2">
+            <LogOut className="h-4 w-4" />
+            Sign Out
+          </Button>
         </div>
 
         <StatsCards stats={stats} />

@@ -1,10 +1,5 @@
-import { createClient } from '@supabase/supabase-js'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://placeholder.supabase.co'
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'placeholder-key'
-
-export const supabase = createClient(supabaseUrl, supabaseKey)
+import { supabase } from '@/integrations/supabase/client'
 
 export const useJobs = () => {
   return useQuery({
@@ -16,7 +11,24 @@ export const useJobs = () => {
         .order('created_at', { ascending: false })
       
       if (error) throw error
-      return data
+      
+      // Transform database fields to match JobCard interface
+      return data?.map(job => ({
+        id: job.id,
+        title: job.title,
+        company: job.company,
+        url: job.url,
+        status: job.status as "applied" | "pending" | "rejected" | "no-response",
+        appliedAt: job.applied_at ? new Date(job.applied_at) : undefined,
+        payRange: job.pay_range,
+        type: job.job_type,
+        contact: {
+          email: job.contact_email,
+          phone: job.contact_phone
+        },
+        resumeRequired: job.resume_required || false,
+        notes: job.notes
+      })) || []
     }
   })
 }
@@ -50,13 +62,25 @@ export const useAutomationStats = () => {
       
       if (error && error.code !== 'PGRST116') throw error
       
-      return data || {
-        total_jobs: 0,
+      // Transform database fields to match StatsCards interface
+      if (data) {
+        return {
+          totalJobs: data.total_jobs || 0,
+          applied: data.applied || 0,
+          pending: data.pending || 0,
+          successRate: data.success_rate || 0,
+          automationRuns: data.automation_runs || 0,
+          webhooksTriggered: data.webhooks_triggered || 0
+        }
+      }
+      
+      return {
+        totalJobs: 0,
         applied: 0,
         pending: 0,
-        success_rate: 0,
-        automation_runs: 0,
-        webhooks_triggered: 0
+        successRate: 0,
+        automationRuns: 0,
+        webhooksTriggered: 0
       }
     }
   })
