@@ -33,7 +33,7 @@ export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSetting
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Bot className="h-5 w-5" />
-            jjmapplyx AI Agent
+            JJMapplyx AI Agent
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
