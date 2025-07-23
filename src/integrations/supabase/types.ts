@@ -14,7 +14,168 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      automation_logs: {
+        Row: {
+          action: string
+          created_at: string
+          details: string | null
+          id: string
+          metadata: Json | null
+          status: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          metadata?: Json | null
+          status?: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          metadata?: Json | null
+          status?: string
+        }
+        Relationships: []
+      }
+      automation_stats: {
+        Row: {
+          applied: number | null
+          automation_runs: number | null
+          created_at: string
+          date: string
+          id: string
+          pending: number | null
+          success_rate: number | null
+          total_jobs: number | null
+          updated_at: string
+          user_id: string | null
+          webhooks_triggered: number | null
+        }
+        Insert: {
+          applied?: number | null
+          automation_runs?: number | null
+          created_at?: string
+          date?: string
+          id?: string
+          pending?: number | null
+          success_rate?: number | null
+          total_jobs?: number | null
+          updated_at?: string
+          user_id?: string | null
+          webhooks_triggered?: number | null
+        }
+        Update: {
+          applied?: number | null
+          automation_runs?: number | null
+          created_at?: string
+          date?: string
+          id?: string
+          pending?: number | null
+          success_rate?: number | null
+          total_jobs?: number | null
+          updated_at?: string
+          user_id?: string | null
+          webhooks_triggered?: number | null
+        }
+        Relationships: []
+      }
+      jobs: {
+        Row: {
+          applied_at: string | null
+          company: string
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string
+          id: string
+          job_type: string | null
+          notes: string | null
+          pay_range: string | null
+          resume_required: boolean | null
+          status: string
+          title: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          applied_at?: string | null
+          company: string
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+          job_type?: string | null
+          notes?: string | null
+          pay_range?: string | null
+          resume_required?: boolean | null
+          status?: string
+          title: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          applied_at?: string | null
+          company?: string
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+          job_type?: string | null
+          notes?: string | null
+          pay_range?: string | null
+          resume_required?: boolean | null
+          status?: string
+          title?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
+      }
+      user_settings: {
+        Row: {
+          auto_apply: boolean | null
+          created_at: string
+          email: string | null
+          id: string
+          n8n_webhook_url: string | null
+          phone: string | null
+          runs_per_day: number | null
+          updated_at: string
+          user_id: string | null
+          webhook_make: string | null
+          webhook_power_automate: string | null
+        }
+        Insert: {
+          auto_apply?: boolean | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          n8n_webhook_url?: string | null
+          phone?: string | null
+          runs_per_day?: number | null
+          updated_at?: string
+          user_id?: string | null
+          webhook_make?: string | null
+          webhook_power_automate?: string | null
+        }
+        Update: {
+          auto_apply?: boolean | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          n8n_webhook_url?: string | null
+          phone?: string | null
+          runs_per_day?: number | null
+          updated_at?: string
+          user_id?: string | null
+          webhook_make?: string | null
+          webhook_power_automate?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
