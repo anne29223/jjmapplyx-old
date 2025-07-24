@@ -3,7 +3,11 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-webhook-signature',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-webhook-signature, x-forwarded-for',
+  'Content-Security-Policy': "default-src 'none'; frame-ancestors 'none';",
+  'X-Content-Type-Options': 'nosniff',
+  'X-Frame-Options': 'DENY',
+  'Referrer-Policy': 'no-referrer'
 }
 
 // Input validation functions
@@ -17,21 +21,111 @@ function validateJobData(data: any) {
 function sanitizeInput(input: string): string {
   return input.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
               .replace(/javascript:/gi, '')
+              .replace(/on\w+\s*=/gi, '')
               .trim();
 }
 
+// Advanced rate limiting
+interface RateLimit {
+  count: number;
+  resetTime: number;
+}
+
+const rateLimits = new Map<string, RateLimit>();
+const MAX_REQUESTS_PER_MINUTE = 60;
+const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const key = `rate_limit:${ip}`;
+  const limit = rateLimits.get(key);
+  
+  if (!limit || now > limit.resetTime) {
+    rateLimits.set(key, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
+    return true;
+  }
+  
+  if (limit.count >= MAX_REQUESTS_PER_MINUTE) {
+    return false;
+  }
+  
+  limit.count++;
+  return true;
+}
+
+// Webhook signature verification
+async function verifyWebhookSignature(
+  payload: string,
+  signature: string,
+  secret: string
+): Promise<boolean> {
+  if (!signature || !secret) return false;
+  
+  try {
+    const encoder = new TextEncoder();
+    const keyData = encoder.encode(secret);
+    const dataToSign = encoder.encode(payload);
+    
+    const cryptoKey = await crypto.subtle.importKey(
+      'raw',
+      keyData,
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign']
+    );
+    
+    const signatureBuffer = await crypto.subtle.sign('HMAC', cryptoKey, dataToSign);
+    const expectedSignature = Array.from(new Uint8Array(signatureBuffer))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+    
+    const cleanSignature = signature.replace(/^sha256=/, '');
+    return cleanSignature === expectedSignature;
+  } catch (error) {
+    console.error('Webhook signature verification failed:', error);
+    return false;
+  }
+}
+
 serve(async (req) => {
+  // Security headers for all responses
+  const secureHeaders = {
+    ...corsHeaders,
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'DENY',
+    'Content-Type': 'application/json'
+  };
+
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', { headers: secureHeaders })
   }
 
   try {
+    // Rate limiting
+    const clientIP = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+    if (!checkRateLimit(clientIP)) {
+      return new Response(
+        JSON.stringify({ error: 'Rate limit exceeded' }),
+        { status: 429, headers: secureHeaders }
+      );
+    }
+
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
     )
 
-    const { action, data } = await req.json()
+    // Get raw body for signature verification
+    const body = await req.text();
+    let requestData;
+    
+    try {
+      requestData = JSON.parse(body);
+    } catch (parseError) {
+      throw new Error('Invalid JSON payload');
+    }
+
+    const { action, data } = requestData;
 
     // Basic input validation
     if (!action || typeof action !== 'string') {
@@ -59,9 +153,20 @@ serve(async (req) => {
       userId = data.userId;
     }
 
-    // Rate limiting check (basic implementation)
-    const timestamp = Date.now()
-    const requestKey = req.headers.get('x-forwarded-for') || 'unknown'
+    // Webhook signature verification (if secret is provided)
+    const webhookSecret = Deno.env.get('N8N_WEBHOOK_SECRET');
+    const signature = req.headers.get('x-webhook-signature');
+    
+    if (webhookSecret && signature) {
+      const isValidSignature = await verifyWebhookSignature(body, signature, webhookSecret);
+      if (!isValidSignature) {
+        console.error('Invalid webhook signature');
+        return new Response(
+          JSON.stringify({ error: 'Invalid webhook signature' }),
+          { status: 401, headers: secureHeaders }
+        );
+      }
+    }
     
     // Log the webhook action with user context
     await supabaseClient
@@ -151,21 +256,20 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({ success: true, message: `Processed ${action}` }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
-      },
+      { headers: secureHeaders, status: 200 }
     )
 
   } catch (error) {
     console.error('n8n webhook error:', error)
     
+    // Don't expose internal error details
+    const errorMessage = error instanceof Error ? 
+      (error.message.includes('Invalid') ? error.message : 'Internal server error') : 
+      'Internal server error';
+    
     return new Response(
-      JSON.stringify({ error: error.message }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
-      },
+      JSON.stringify({ error: errorMessage }),
+      { headers: secureHeaders, status: error.message.includes('Invalid') ? 400 : 500 }
     )
   }
 })

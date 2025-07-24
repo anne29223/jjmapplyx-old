@@ -8,10 +8,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { validatePasswordStrength, validateFormData, loginRateLimiter, generateCSRFToken } from '@/lib/security';
+import { PasswordStrengthIndicator } from '@/components/ui/password-strength';
 
 export default function Auth() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [password, setPassword] = useState('');
+  const [passwordStrength, setPasswordStrength] = useState(validatePasswordStrength(''));
+  const [csrfToken] = useState(generateCSRFToken());
+  const [rateLimitError, setRateLimitError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   // Check if user is already logged in
@@ -29,14 +35,26 @@ export default function Auth() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setRateLimitError(null);
 
     const formData = new FormData(e.currentTarget);
+    
+    // Enhanced form validation
+    const validation = validateFormData(formData, ['email', 'password']);
+    if (!validation.isValid) {
+      setError(validation.errors.join(', '));
+      setLoading(false);
+      return;
+    }
+
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
     const fullName = formData.get('fullName') as string;
 
-    if (!email || !password) {
-      setError('Please fill in all fields');
+    // Password strength validation
+    const strength = validatePasswordStrength(password);
+    if (!strength.isStrong) {
+      setError('Password does not meet security requirements. Please choose a stronger password.');
       setLoading(false);
       return;
     }
@@ -76,13 +94,25 @@ export default function Auth() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setRateLimitError(null);
 
     const formData = new FormData(e.currentTarget);
+    
+    // Enhanced form validation
+    const validation = validateFormData(formData, ['email', 'password']);
+    if (!validation.isValid) {
+      setError(validation.errors.join(', '));
+      setLoading(false);
+      return;
+    }
+
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
 
-    if (!email || !password) {
-      setError('Please fill in all fields');
+    // Rate limiting check
+    if (!loginRateLimiter.isAllowed(email)) {
+      const remainingTime = Math.ceil(loginRateLimiter.getRemainingTime(email) / (60 * 1000));
+      setRateLimitError(`Too many login attempts. Please try again in ${remainingTime} minutes.`);
       setLoading(false);
       return;
     }
@@ -191,10 +221,22 @@ export default function Auth() {
                       name="password"
                       type="password"
                       placeholder="Create a password"
+                      value={password}
+                      onChange={(e) => {
+                        const newPassword = e.target.value;
+                        setPassword(newPassword);
+                        setPasswordStrength(validatePasswordStrength(newPassword));
+                      }}
                       required
-                      minLength={6}
+                      minLength={8}
                     />
+                    <PasswordStrengthIndicator strength={passwordStrength} password={password} />
                   </div>
+                  {rateLimitError && (
+                    <Alert variant="destructive">
+                      <AlertDescription>{rateLimitError}</AlertDescription>
+                    </Alert>
+                  )}
                   {error && (
                     <Alert variant="destructive">
                       <AlertDescription>{error}</AlertDescription>
