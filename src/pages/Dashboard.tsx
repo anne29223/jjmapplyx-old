@@ -234,115 +234,123 @@ export const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <SiteViewer url={viewingUrl} onClose={() => setViewingUrl(null)} />
       
-      <div className="container mx-auto p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              JJMapplyx Dashboard
-            </h1>
-            <p className="text-muted-foreground">
-              AI-powered job application automation
-            </p>
-          </div>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground">
-              Welcome, {user?.email}
-            </span>
-            <Button variant="outline" onClick={handleSignOut} className="flex items-center gap-2">
-              <LogOut className="h-4 w-4" />
-              Sign Out
-            </Button>
-          </div>
-        </div>
-
-        <StatsCards stats={stats} />
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
-            <ControlPanel
-              isRunning={isAgentRunning}
-              onToggleBot={() => setIsAgentRunning(!isAgentRunning)}
-              settings={settings}
-              onUpdateSettings={() => {}} // Handled in ControlPanel via useUpdateSettings
-            />
-          </div>
-          <div className="space-y-6">
-            <AutomationLogs />
-            <TestWebhook />
-          </div>
-        </div>
-
-        <Tabs defaultValue="jobs" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="jobs">Job Applications</TabsTrigger>
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
-            <TabsTrigger value="settings">Site Config</TabsTrigger>
-            <TabsTrigger value="data">Export/Import</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="jobs" className="space-y-4">
+      <div className="flex-1">
+        <div className="container mx-auto p-6 space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-semibold">Job Applications</h2>
-            <div className="flex gap-3">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input
-                  placeholder="Search jobs..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 w-64"
-                />
-              </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-40">
-                  <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-popover border-border">
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="applied">Applied</SelectItem>
-                  <SelectItem value="no-response">No Response</SelectItem>
-                  <SelectItem value="rejected">Rejected</SelectItem>
-                </SelectContent>
-              </Select>
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                JJMapplyx Dashboard
+              </h1>
+              <p className="text-muted-foreground">
+                AI-powered job application automation
+              </p>
+            </div>
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-muted-foreground">
+                Welcome, {user?.email}
+              </span>
+              <Button variant="outline" onClick={handleSignOut} className="flex items-center gap-2">
+                <LogOut className="h-4 w-4" />
+                Sign Out
+              </Button>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-            {filteredJobs.map((job) => (
-              <JobCard
-                key={job.id}
-                job={job}
-                onViewSite={(url) => setViewingUrl(url)}
-                onApply={() => handleJobApply(job.id)}
+          <StatsCards stats={stats} />
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              <ControlPanel
+                isRunning={isAgentRunning}
+                onToggleBot={() => setIsAgentRunning(!isAgentRunning)}
+                settings={settings}
+                onUpdateSettings={() => {}} // Handled in ControlPanel via useUpdateSettings
               />
-            ))}
+            </div>
+            <div className="space-y-6">
+              <AutomationLogs />
+              <TestWebhook />
+            </div>
           </div>
 
-          {filteredJobs.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">No jobs found matching your criteria.</p>
+          <Tabs defaultValue="jobs" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="jobs">Job Applications</TabsTrigger>
+              <TabsTrigger value="analytics">Analytics</TabsTrigger>
+              <TabsTrigger value="settings">Site Config</TabsTrigger>
+              <TabsTrigger value="data">Export/Import</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="jobs" className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-semibold">Job Applications</h2>
+              <div className="flex gap-3">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                  <Input
+                    placeholder="Search jobs..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 w-64"
+                  />
+                </div>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-40">
+                    <Filter className="h-4 w-4 mr-2" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover border-border">
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="applied">Applied</SelectItem>
+                    <SelectItem value="no-response">No Response</SelectItem>
+                    <SelectItem value="rejected">Rejected</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-          )}
-          </TabsContent>
 
-          <TabsContent value="analytics">
-            <Analytics />
-          </TabsContent>
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+              {filteredJobs.map((job) => (
+                <JobCard
+                  key={job.id}
+                  job={job}
+                  onViewSite={(url) => setViewingUrl(url)}
+                  onApply={() => handleJobApply(job.id)}
+                />
+              ))}
+            </div>
 
-          <TabsContent value="settings">
-            <JobSiteConfig />
-          </TabsContent>
+            {filteredJobs.length === 0 && (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">No jobs found matching your criteria.</p>
+              </div>
+            )}
+            </TabsContent>
 
-          <TabsContent value="data">
-            <ExportImport />
-          </TabsContent>
-        </Tabs>
+            <TabsContent value="analytics">
+              <Analytics />
+            </TabsContent>
+
+            <TabsContent value="settings">
+              <JobSiteConfig />
+            </TabsContent>
+
+            <TabsContent value="data">
+              <ExportImport />
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
+      
+      <footer className="w-full py-6 text-center bg-muted/50 text-muted-foreground text-sm border-t border-border mt-12">
+        <p>
+          © {new Date().getFullYear()} <strong>JJMApplyX</strong> &nbsp;|&nbsp; Land jobs. No interviews. All auto.
+        </p>
+      </footer>
     </div>
   );
 };
