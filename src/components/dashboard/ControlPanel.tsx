@@ -51,9 +51,52 @@ export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSetting
   };
 
   const handleSettingsUpdate = (newSettings: any) => {
-    updateSettings(newSettings, {
+    // Validate inputs before saving
+    const errors = [];
+    
+    if (newSettings.email && !validateEmail(newSettings.email)) {
+      errors.push("Invalid email format");
+    }
+    
+    if (newSettings.phone && !validatePhoneNumber(newSettings.phone)) {
+      errors.push("Invalid phone number format");
+    }
+    
+    if (newSettings.n8n_webhook_url && !validateWebhookUrl(newSettings.n8n_webhook_url)) {
+      errors.push("Invalid n8n webhook URL");
+    }
+    
+    if (newSettings.webhook_make && !validateWebhookUrl(newSettings.webhook_make)) {
+      errors.push("Invalid Make.com webhook URL");
+    }
+    
+    if (newSettings.webhook_power_automate && !validateWebhookUrl(newSettings.webhook_power_automate)) {
+      errors.push("Invalid Power Automate webhook URL");
+    }
+    
+    if (newSettings.runs_per_day && !validateRunsPerDay(newSettings.runs_per_day)) {
+      errors.push("Runs per day must be between 1 and 50");
+    }
+    
+    if (errors.length > 0) {
+      toast({
+        title: "Validation Error",
+        description: errors.join(", "),
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Sanitize inputs
+    const sanitizedSettings = {
+      ...newSettings,
+      email: newSettings.email ? sanitizeInput(newSettings.email) : '',
+      phone: newSettings.phone ? sanitizeInput(newSettings.phone) : '',
+    };
+
+    updateSettings(sanitizedSettings, {
       onSuccess: () => {
-        onUpdateSettings(newSettings);
+        onUpdateSettings(sanitizedSettings);
         toast({
           title: "Settings Updated",
           description: "Your settings have been saved successfully.",

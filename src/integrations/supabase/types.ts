@@ -22,6 +22,7 @@ export type Database = {
           id: string
           metadata: Json | null
           status: string
+          user_id: string | null
         }
         Insert: {
           action: string
@@ -30,6 +31,7 @@ export type Database = {
           id?: string
           metadata?: Json | null
           status?: string
+          user_id?: string | null
         }
         Update: {
           action?: string
@@ -38,6 +40,7 @@ export type Database = {
           id?: string
           metadata?: Json | null
           status?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -99,6 +102,7 @@ export type Database = {
           title: string
           updated_at: string
           url: string
+          user_id: string | null
         }
         Insert: {
           applied_at?: string | null
@@ -115,6 +119,7 @@ export type Database = {
           title: string
           updated_at?: string
           url: string
+          user_id?: string | null
         }
         Update: {
           applied_at?: string | null
@@ -131,6 +136,7 @@ export type Database = {
           title?: string
           updated_at?: string
           url?: string
+          user_id?: string | null
         }
         Relationships: []
       }

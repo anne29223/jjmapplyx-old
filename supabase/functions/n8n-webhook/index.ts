@@ -28,7 +28,7 @@ serve(async (req) => {
   try {
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
     )
 
     const { action, data } = await req.json()
@@ -41,18 +41,37 @@ serve(async (req) => {
     // Sanitize action
     const sanitizedAction = sanitizeInput(action)
 
+    // Get user context from authorization header if available
+    const authHeader = req.headers.get('Authorization');
+    let userId = null;
+    
+    if (authHeader) {
+      try {
+        const { data: { user } } = await supabaseClient.auth.getUser(authHeader.replace('Bearer ', ''));
+        userId = user?.id || null;
+      } catch (error) {
+        console.log('Failed to get user from auth header:', error);
+      }
+    }
+
+    // If no auth header, try to get user_id from data payload
+    if (!userId && data.userId) {
+      userId = data.userId;
+    }
+
     // Rate limiting check (basic implementation)
     const timestamp = Date.now()
     const requestKey = req.headers.get('x-forwarded-for') || 'unknown'
     
-    // Log the webhook action
+    // Log the webhook action with user context
     await supabaseClient
       .from('automation_logs')
       .insert({
         action: `n8n-${action}`,
         status: 'success',
         details: `Received n8n webhook for ${action}`,
-        metadata: data
+        metadata: data,
+        user_id: userId
       })
 
     console.log(`n8n webhook received: ${action}`, data)
@@ -76,7 +95,8 @@ serve(async (req) => {
             contact_email: data.contactEmail,
             contact_phone: data.contactPhone,
             resume_required: data.resumeRequired || false,
-            notes: data.notes ? sanitizeInput(data.notes) : 'Found via n8n automation'
+            notes: data.notes ? sanitizeInput(data.notes) : 'Found via n8n automation',
+            user_id: userId
           })
 
         if (jobError) throw jobError
