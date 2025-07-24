@@ -58,7 +58,7 @@ export const useAutomationStats = () => {
         .from('automation_stats')
         .select('*')
         .eq('date', today)
-        .single()
+        .maybeSingle()
       
       if (error && error.code !== 'PGRST116') throw error
       
