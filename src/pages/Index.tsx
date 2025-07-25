@@ -7,10 +7,13 @@ const Index = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    console.log('Index: Effect triggered', { loading, user: !!user });
     if (!loading) {
       if (user) {
+        console.log('Index: Navigating to dashboard');
         navigate("/dashboard");
       } else {
+        console.log('Index: Navigating to auth');
         navigate("/auth");
       }
     }
