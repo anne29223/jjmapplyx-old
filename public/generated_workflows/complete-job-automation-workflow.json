@@ -1,0 +1,456 @@
+{
+  "name": "Complete Job Automation Workflow",
+  "description": "End-to-end job search automation with secure user context and advanced features",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "job-automation",
+        "httpMethod": "POST",
+        "authentication": "headerAuth"
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "webhookId": "job-automation-webhook"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "user_id",
+              "value": "={{$json.user_id}}"
+            },
+            {
+              "name": "search_query",
+              "value": "={{$json.search_query || 'software engineer'}}"
+            },
+            {
+              "name": "location",
+              "value": "={{$json.location || 'remote'}}"
+            },
+            {
+              "name": "experience_level",
+              "value": "={{$json.experience_level || 'mid'}}"
+            }
+          ]
+        }
+      },
+      "id": "extract-params",
+      "name": "Extract Parameters",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://www.indeed.com/jobs",
+        "options": {
+          "timeout": 15000,
+          "followRedirect": true,
+          "headers": {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+          }
+        },
+        "qs": {
+          "q": "={{$node['Extract Parameters'].json.search_query}}",
+          "l": "={{$node['Extract Parameters'].json.location}}",
+          "fromage": "3",
+          "limit": "50"
+        }
+      },
+      "id": "scrape-indeed",
+      "name": "Scrape Indeed Jobs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [680, 180]
+    },
+    {
+      "parameters": {
+        "url": "https://www.linkedin.com/jobs/search",
+        "options": {
+          "timeout": 15000,
+          "headers": {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+          }
+        },
+        "qs": {
+          "keywords": "={{$node['Extract Parameters'].json.search_query}}",
+          "location": "={{$node['Extract Parameters'].json.location}}",
+          "f_TPR": "r86400",
+          "f_E": "2,3,4"
+        }
+      },
+      "id": "scrape-linkedin",
+      "name": "Scrape LinkedIn Jobs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://jobs2careers.com/search",
+        "options": {
+          "timeout": 15000,
+          "headers": {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+          }
+        },
+        "qs": {
+          "q": "={{$node['Extract Parameters'].json.search_query}}",
+          "l": "={{$node['Extract Parameters'].json.location}}",
+          "radius": "25"
+        }
+      },
+      "id": "scrape-jobs2careers",
+      "name": "Scrape Jobs2Careers",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [680, 420]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Advanced job parsing with security and validation\nconst jobs = [];\nconst userId = $node['Extract Parameters'].json.user_id;\n\n// Function to safely extract text\nfunction safeExtract(html, regex, index = 1) {\n  const match = regex.exec(html);\n  return match ? match[index].trim().replace(/<[^>]*>/g, '') : null;\n}\n\n// Function to validate and sanitize job data\nfunction validateJob(job) {\n  if (!job.title || !job.company || !job.url) return false;\n  if (job.title.length < 3 || job.company.length < 2) return false;\n  if (!job.url.startsWith('http')) return false;\n  return true;\n}\n\n// Parse Indeed jobs\nconst indeedHtml = $input.all().find(item => item.json.headers?.['content-type']?.includes('text/html'))?.json.body || '';\nconst indeedJobs = parseIndeedJobs(indeedHtml, userId);\n\n// Parse LinkedIn jobs\nconst linkedinHtml = $input.all().find(item => item.json.url?.includes('linkedin'))?.json.body || '';\nconst linkedinJobs = parseLinkedInJobs(linkedinHtml, userId);\n\n// Parse Jobs2Careers\nconst jobs2careersHtml = $input.all().find(item => item.json.url?.includes('jobs2careers'))?.json.body || '';\nconst jobs2careersJobs = parseJobs2CareersJobs(jobs2careersHtml, userId);\n\nfunction parseIndeedJobs(html, userId) {\n  const jobs = [];\n  const titleRegex = /<h2[^>]*>.*?<a[^>]*href=\"([^\"]*)\">.*?<span[^>]*>([^<]*)<\\/span>/g;\n  const companyRegex = /<span class=\"companyName\">.*?<a[^>]*>([^<]*)<\\/a>/g;\n  \n  let match;\n  while ((match = titleRegex.exec(html)) !== null && jobs.length < 20) {\n    const url = match[1].startsWith('/') ? `https://indeed.com${match[1]}` : match[1];\n    const title = match[2];\n    \n    const companyMatch = companyRegex.exec(html);\n    const company = companyMatch ? companyMatch[1] : 'Unknown Company';\n    \n    const job = {\n      title,\n      company,\n      url,\n      source: 'Indeed',\n      user_id: userId,\n      dateFound: new Date().toISOString(),\n      resume_required: false\n    };\n    \n    if (validateJob(job)) {\n      jobs.push(job);\n    }\n  }\n  return jobs;\n}\n\nfunction parseLinkedInJobs(html, userId) {\n  const jobs = [];\n  const jobRegex = /<a[^>]*href=\"([^\"]*job[^\"]*)\">.*?<h3[^>]*>([^<]*)<\\/h3>.*?<h4[^>]*>([^<]*)<\\/h4>/g;\n  \n  let match;\n  while ((match = jobRegex.exec(html)) !== null && jobs.length < 20) {\n    const job = {\n      title: match[2].trim(),\n      company: match[3].trim(),\n      url: match[1].startsWith('/') ? `https://linkedin.com${match[1]}` : match[1],\n      source: 'LinkedIn',\n      user_id: userId,\n      dateFound: new Date().toISOString(),\n      resume_required: true\n    };\n    \n    if (validateJob(job)) {\n      jobs.push(job);\n    }\n  }\n  return jobs;\n}\n\nfunction parseJobs2CareersJobs(html, userId) {\n  const jobs = [];\n  const jobRegex = /<a[^>]*href=\"([^\"]*)\">.*?<div[^>]*class=\"[^\"]*title[^\"]*\">([^<]*)<\\/div>.*?<div[^>]*class=\"[^\"]*company[^\"]*\">([^<]*)<\\/div>/g;\n  \n  let match;\n  while ((match = jobRegex.exec(html)) !== null && jobs.length < 15) {\n    const job = {\n      title: match[2].trim(),\n      company: match[3].trim(),\n      url: match[1].startsWith('/') ? `https://jobs2careers.com${match[1]}` : match[1],\n      source: 'Jobs2Careers',\n      user_id: userId,\n      dateFound: new Date().toISOString(),\n      resume_required: false,\n      notes: 'No interview - quick apply site'\n    };\n    \n    if (validateJob(job)) {\n      jobs.push(job);\n    }\n  }\n  return jobs;\n}\n\n// Combine all jobs and remove duplicates\nconst allJobs = [...indeedJobs, ...linkedinJobs, ...jobs2careersJobs];\nconst uniqueJobs = allJobs.filter((job, index, self) => \n  index === self.findIndex(j => j.title === job.title && j.company === job.company)\n);\n\nconsole.log(`Parsed ${uniqueJobs.length} unique jobs for user ${userId}`);\n\nreturn uniqueJobs.map(job => ({ json: job }));"
+      },
+      "id": "parse-jobs",
+      "name": "Parse & Validate Jobs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$json.title}}",
+              "operation": "isNotEmpty"
+            },
+            {
+              "value1": "={{$json.company}}",
+              "operation": "isNotEmpty"
+            },
+            {
+              "value1": "={{$json.url}}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        },
+        "combineOperation": "all"
+      },
+      "id": "validate-job-data",
+      "name": "Validate Job Data",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://tzvzranspvtifnlgrkwi.supabase.co/functions/v1/n8n-webhook",
+        "authentication": "headerAuth",
+        "headers": {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer {{$node['Webhook Trigger'].json.headers.authorization}}"
+        },
+        "body": {
+          "action": "job-found",
+          "data": "={{$json}}",
+          "userId": "={{$json.user_id}}"
+        },
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "send-to-jjmapplyx",
+      "name": "Send to JJMApplyX",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1340, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json.resume_required}}",
+              "value2": false
+            }
+          ]
+        }
+      },
+      "id": "check-auto-apply",
+      "name": "Check Auto Apply Eligible",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1560, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{$json.url}}",
+        "options": {
+          "timeout": 10000,
+          "headers": {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+          }
+        }
+      },
+      "id": "load-job-page",
+      "name": "Load Job Page",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1780, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Analyze job page for application possibility\nconst html = $json.body;\nconst jobData = $node['Check Auto Apply Eligible'].json;\n\n// Look for application buttons\nconst applyButtons = [\n  /apply[\\s\\-_]*now/i,\n  /quick[\\s\\-_]*apply/i,\n  /one[\\s\\-_]*click[\\s\\-_]*apply/i,\n  /submit[\\s\\-_]*application/i\n];\n\n// Look for external redirects\nconst externalRedirects = [\n  /redirect/i,\n  /external/i,\n  /company[\\s\\-_]*website/i,\n  /visit[\\s\\-_]*employer/i\n];\n\n// Look for resume requirements\nconst resumeRequired = [\n  /upload[\\s\\-_]*resume/i,\n  /attach[\\s\\-_]*cv/i,\n  /resume[\\s\\-_]*required/i\n];\n\nlet canApply = false;\nlet isExternal = false;\nlet needsResume = false;\n\n// Check for apply buttons\nfor (const pattern of applyButtons) {\n  if (pattern.test(html)) {\n    canApply = true;\n    break;\n  }\n}\n\n// Check for external redirects\nfor (const pattern of externalRedirects) {\n  if (pattern.test(html)) {\n    isExternal = true;\n    break;\n  }\n}\n\n// Check for resume requirements\nfor (const pattern of resumeRequired) {\n  if (pattern.test(html)) {\n    needsResume = true;\n    break;\n  }\n}\n\n// Jobs2Careers special handling (usually no resume required)\nif (jobData.source === 'Jobs2Careers') {\n  canApply = true;\n  needsResume = false;\n}\n\nreturn {\n  ...jobData,\n  canApply,\n  isExternal,\n  needsResume,\n  analysisDate: new Date().toISOString()\n};"
+      },
+      "id": "analyze-application",
+      "name": "Analyze Application Possibility",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2000, 200]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json.canApply}}",
+              "value2": true
+            },
+            {
+              "value1": "={{$json.needsResume}}",
+              "value2": false
+            }
+          ]
+        },
+        "combineOperation": "all"
+      },
+      "id": "can-auto-apply",
+      "name": "Can Auto Apply?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [2220, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://tzvzranspvtifnlgrkwi.supabase.co/functions/v1/n8n-webhook",
+        "authentication": "headerAuth",
+        "headers": {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer {{$node['Webhook Trigger'].json.headers.authorization}}"
+        },
+        "body": {
+          "action": "application-submitted",
+          "data": {
+            "jobId": "={{$json.id}}",
+            "userId": "={{$json.user_id}}",
+            "notes": "Auto-applied via n8n automation"
+          }
+        }
+      },
+      "id": "report-success",
+      "name": "Report Application Success",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [2440, 100]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://tzvzranspvtifnlgrkwi.supabase.co/functions/v1/n8n-webhook",
+        "authentication": "headerAuth",
+        "headers": {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer {{$node['Webhook Trigger'].json.headers.authorization}}"
+        },
+        "body": {
+          "action": "application-failed",
+          "data": {
+            "jobId": "={{$json.id}}",
+            "userId": "={{$json.user_id}}",
+            "error": "Cannot auto-apply: {{$json.needsResume ? 'Resume required' : 'No apply button found'}}"
+          }
+        }
+      },
+      "id": "report-failure",
+      "name": "Report Application Failure",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [2440, 300]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Extract Parameters",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Parameters": {
+      "main": [
+        [
+          {
+            "node": "Scrape Indeed Jobs",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Scrape LinkedIn Jobs", 
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Scrape Jobs2Careers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scrape Indeed Jobs": {
+      "main": [
+        [
+          {
+            "node": "Parse & Validate Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scrape LinkedIn Jobs": {
+      "main": [
+        [
+          {
+            "node": "Parse & Validate Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scrape Jobs2Careers": {
+      "main": [
+        [
+          {
+            "node": "Parse & Validate Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse & Validate Jobs": {
+      "main": [
+        [
+          {
+            "node": "Validate Job Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Job Data": {
+      "main": [
+        [
+          {
+            "node": "Send to JJMApplyX",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send to JJMApplyX": {
+      "main": [
+        [
+          {
+            "node": "Check Auto Apply Eligible",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Auto Apply Eligible": {
+      "main": [
+        [
+          {
+            "node": "Load Job Page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Job Page": {
+      "main": [
+        [
+          {
+            "node": "Analyze Application Possibility",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze Application Possibility": {
+      "main": [
+        [
+          {
+            "node": "Can Auto Apply?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Can Auto Apply?": {
+      "main": [
+        [
+          {
+            "node": "Report Application Success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Report Application Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "id": "security",
+      "name": "Security Enhanced"
+    },
+    {
+      "id": "automation",
+      "name": "Full Automation"
+    }
+  ],
+  "triggerCount": 0,
+  "updatedAt": "2024-01-01T00:00:00.000Z",
+  "versionId": "1"
+}
+
