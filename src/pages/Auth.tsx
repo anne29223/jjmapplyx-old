@@ -144,9 +144,9 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: 'linear-gradient(135deg, #dbeafe 0%, #ffffff 50%, #e0e7ff 100%)' }}>
+    <div className="min-h-screen flex flex-col" style={{ background: '#3b82f6 !important', minHeight: '100vh' }}>
       <div className="flex-1 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md emergency-visible" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', border: '2px solid #3b82f6', backgroundColor: 'white' }}>
+        <Card className="w-full max-w-md" style={{ background: '#ffffff !important', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25) !important', border: '2px solid #1d4ed8 !important' }}>
           <CardHeader className="text-center" style={{ background: 'linear-gradient(135deg, #2563eb, #4f46e5)', color: 'white', borderRadius: '8px 8px 0 0' }}>
             <CardTitle className="text-2xl font-bold" style={{ color: 'white' }}>JJMApplyX</CardTitle>
             <CardDescription style={{ color: '#dbeafe' }}>
