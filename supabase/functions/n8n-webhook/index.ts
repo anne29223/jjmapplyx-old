@@ -101,11 +101,32 @@ serve(async (req) => {
   }
 
   try {
-    // Rate limiting
+    // Enhanced rate limiting with security logging
     const clientIP = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
     if (!checkRateLimit(clientIP)) {
+      console.log(`Rate limit exceeded for IP: ${clientIP}`);
+      
+      // Log security event
+      const supabaseClient = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      );
+      
+      try {
+        await supabaseClient.rpc('log_security_event', {
+          _user_id: null,
+          _action: 'rate_limit_exceeded',
+          _resource: 'n8n-webhook',
+          _ip_address: clientIP,
+          _success: false,
+          _details: { timestamp: new Date().toISOString() }
+        });
+      } catch (error) {
+        console.error('Failed to log security event:', error);
+      }
+      
       return new Response(
-        JSON.stringify({ error: 'Rate limit exceeded' }),
+        JSON.stringify({ error: 'Rate limit exceeded. Please try again later.' }),
         { status: 429, headers: secureHeaders }
       );
     }
@@ -153,19 +174,78 @@ serve(async (req) => {
       userId = data.userId;
     }
 
-    // Webhook signature verification (if secret is provided)
+    // ENFORCE webhook signature verification (CRITICAL SECURITY FIX)
     const webhookSecret = Deno.env.get('N8N_WEBHOOK_SECRET');
+    if (!webhookSecret) {
+      console.error('Webhook secret not configured - blocking request for security');
+      
+      // Log security event
+      try {
+        await supabaseClient.rpc('log_security_event', {
+          _user_id: userId,
+          _action: 'webhook_no_secret',
+          _resource: 'n8n-webhook',
+          _ip_address: clientIP,
+          _success: false,
+          _details: { error: 'Webhook secret not configured' }
+        });
+      } catch (error) {
+        console.error('Failed to log security event:', error);
+      }
+      
+      return new Response(
+        JSON.stringify({ error: 'Webhook signature verification required but not configured' }),
+        { status: 500, headers: secureHeaders }
+      );
+    }
+
     const signature = req.headers.get('x-webhook-signature');
     
-    if (webhookSecret && signature) {
-      const isValidSignature = await verifyWebhookSignature(body, signature, webhookSecret);
-      if (!isValidSignature) {
-        console.error('Invalid webhook signature');
-        return new Response(
-          JSON.stringify({ error: 'Invalid webhook signature' }),
-          { status: 401, headers: secureHeaders }
-        );
+    if (!signature) {
+      console.error('Missing webhook signature');
+      
+      // Log security event
+      try {
+        await supabaseClient.rpc('log_security_event', {
+          _user_id: userId,
+          _action: 'webhook_missing_signature',
+          _resource: 'n8n-webhook',
+          _ip_address: clientIP,
+          _success: false,
+          _details: { error: 'Missing signature header' }
+        });
+      } catch (error) {
+        console.error('Failed to log security event:', error);
       }
+      
+      return new Response(
+        JSON.stringify({ error: 'Missing webhook signature' }),
+        { status: 401, headers: secureHeaders }
+      );
+    }
+
+    const isValidSignature = await verifyWebhookSignature(body, signature, webhookSecret);
+    if (!isValidSignature) {
+      console.error('Invalid webhook signature');
+      
+      // Log security event
+      try {
+        await supabaseClient.rpc('log_security_event', {
+          _user_id: userId,
+          _action: 'webhook_invalid_signature',
+          _resource: 'n8n-webhook',
+          _ip_address: clientIP,
+          _success: false,
+          _details: { error: 'Invalid signature' }
+        });
+      } catch (error) {
+        console.error('Failed to log security event:', error);
+      }
+      
+      return new Response(
+        JSON.stringify({ error: 'Invalid webhook signature' }),
+        { status: 401, headers: secureHeaders }
+      );
     }
     
     // Log the webhook action with user context

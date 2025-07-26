@@ -56,3 +56,32 @@ export function validatePhoneNumber(phone: string): boolean {
 export function validateRunsPerDay(runs: number): boolean {
   return Number.isInteger(runs) && runs >= 1 && runs <= 50;
 }
+
+export function validateFileUpload(file: File, maxSizeMB: number = 10, allowedTypes: string[] = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']): { isValid: boolean; error?: string } {
+  // File size validation
+  const maxSizeBytes = maxSizeMB * 1024 * 1024;
+  if (file.size > maxSizeBytes) {
+    return {
+      isValid: false,
+      error: `File size must be less than ${maxSizeMB}MB`
+    };
+  }
+  
+  // File type validation
+  if (!allowedTypes.includes(file.type)) {
+    return {
+      isValid: false,
+      error: `File type not allowed. Allowed types: ${allowedTypes.join(', ')}`
+    };
+  }
+  
+  // File name validation (prevent path traversal)
+  if (file.name.includes('..') || file.name.includes('/') || file.name.includes('\\')) {
+    return {
+      isValid: false,
+      error: 'Invalid file name'
+    };
+  }
+  
+  return { isValid: true };
+}
