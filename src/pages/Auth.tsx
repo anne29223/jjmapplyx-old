@@ -144,12 +144,12 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+    <div className="min-h-screen flex flex-col" style={{ background: 'linear-gradient(135deg, #dbeafe 0%, #ffffff 50%, #e0e7ff 100%)' }}>
       <div className="flex-1 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md shadow-xl border border-blue-200">
-          <CardHeader className="text-center bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-t-lg">
-            <CardTitle className="text-2xl font-bold text-white">JJMApplyX</CardTitle>
-            <CardDescription className="text-blue-100">
+        <Card className="w-full max-w-md" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', border: '2px solid #3b82f6' }}>
+          <CardHeader className="text-center" style={{ background: 'linear-gradient(135deg, #2563eb, #4f46e5)', color: 'white', borderRadius: '8px 8px 0 0' }}>
+            <CardTitle className="text-2xl font-bold" style={{ color: 'white' }}>JJMApplyX</CardTitle>
+            <CardDescription style={{ color: '#dbeafe' }}>
               Sign in to your account or create a new one
             </CardDescription>
           </CardHeader>
@@ -187,7 +187,7 @@ export default function Auth() {
                       <AlertDescription>{error}</AlertDescription>
                     </Alert>
                   )}
-                  <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white" disabled={loading}>
+                  <Button type="submit" className="w-full" style={{ background: '#2563eb', color: 'white' }} disabled={loading}>
                     {loading ? 'Signing in...' : 'Sign In'}
                   </Button>
                 </form>
