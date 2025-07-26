@@ -9,6 +9,7 @@ import { TestWebhook } from "@/components/dashboard/TestWebhook";
 import { JobSiteConfig } from "@/components/dashboard/JobSiteConfig";
 import { Analytics } from "@/components/dashboard/Analytics";
 import { ExportImport } from "@/components/dashboard/ExportImport";
+import { SecurityConfig } from "@/components/SecurityConfig";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -277,11 +278,12 @@ export const Dashboard = () => {
           </div>
 
           <Tabs defaultValue="jobs" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="jobs">Job Applications</TabsTrigger>
               <TabsTrigger value="analytics">Analytics</TabsTrigger>
               <TabsTrigger value="settings">Site Config</TabsTrigger>
               <TabsTrigger value="data">Export/Import</TabsTrigger>
+              <TabsTrigger value="security">Security</TabsTrigger>
             </TabsList>
 
             <TabsContent value="jobs" className="space-y-4">
@@ -341,6 +343,10 @@ export const Dashboard = () => {
 
             <TabsContent value="data">
               <ExportImport />
+            </TabsContent>
+
+            <TabsContent value="security">
+              <SecurityConfig />
             </TabsContent>
           </Tabs>
         </div>
