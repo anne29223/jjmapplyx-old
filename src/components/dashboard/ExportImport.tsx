@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { TemplateLinks } from './TemplateLinks';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -79,16 +78,13 @@ export const ExportImport = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <TemplateLinks />
-      
-      <Card className="border-border">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Database className="h-5 w-5" />
-            Data Management
-          </CardTitle>
-        </CardHeader>
+    <Card className="border-border">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Database className="h-5 w-5" />
+          Data Management
+        </CardTitle>
+      </CardHeader>
       <CardContent className="space-y-6">
         {/* Export Section */}
         <div className="space-y-4">
@@ -177,6 +173,5 @@ export const ExportImport = () => {
         </div>
       </CardContent>
     </Card>
-    </div>
   );
 };

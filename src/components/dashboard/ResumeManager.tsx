@@ -4,8 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Upload, FileText, X } from "lucide-react";
-import { validateFileUpload } from '@/lib/validation';
-import { toast } from 'sonner';
 
 interface ResumeManagerProps {
   onResumeUpload: (file: File) => void;
@@ -16,19 +14,9 @@ export const ResumeManager = ({ onResumeUpload }: ResumeManagerProps) => {
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      // Enhanced file validation
-      const validation = validateFileUpload(file, 5, ['application/pdf']);
-      
-      if (!validation.isValid) {
-        toast.error(validation.error || 'File validation failed');
-        e.target.value = ''; // Clear the input
-        return;
-      }
-      
+    if (file && (file.type === 'application/pdf' || file.name.endsWith('.pdf'))) {
       setUploadedResume(file);
       onResumeUpload(file);
-      toast.success('Resume uploaded successfully');
     }
   };
 

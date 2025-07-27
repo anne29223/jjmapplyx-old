@@ -32,14 +32,6 @@ export const JobSiteConfig = () => {
       enabled: true,
       keywords: ['react', 'frontend'],
       location: 'New York'
-    },
-    {
-      id: '3',
-      name: 'Jobs2Careers',
-      url: 'https://jobs2careers.com',
-      enabled: true,
-      keywords: ['no interview', 'quick apply', 'remote'],
-      location: 'Remote'
     }
   ]);
 

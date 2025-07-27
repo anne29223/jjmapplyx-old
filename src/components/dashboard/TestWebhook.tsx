@@ -5,7 +5,6 @@ import { Badge } from "@/components/ui/badge";
 import { TestTube, CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { useTriggerN8N } from "@/hooks/useSupabase";
 import { useToast } from "@/hooks/use-toast";
-import { AdminGuard } from '@/components/ui/admin-guard';
 
 export const TestWebhook = () => {
   const [testResults, setTestResults] = useState<Record<string, 'success' | 'error' | 'testing'>>({});
@@ -75,14 +74,13 @@ export const TestWebhook = () => {
   };
 
   return (
-    <AdminGuard requiredRole="moderator">
-      <Card className="border-border">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <TestTube className="h-5 w-5" />
-            Webhook Testing
-          </CardTitle>
-        </CardHeader>
+    <Card className="border-border">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <TestTube className="h-5 w-5" />
+          Webhook Testing
+        </CardTitle>
+      </CardHeader>
       <CardContent className="space-y-4">
         {workflows.map((workflow) => (
           <div key={workflow.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
@@ -113,6 +111,5 @@ export const TestWebhook = () => {
         </div>
       </CardContent>
     </Card>
-    </AdminGuard>
   );
 };

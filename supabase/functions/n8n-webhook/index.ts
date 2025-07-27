@@ -3,285 +3,49 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-webhook-signature, x-forwarded-for',
-  'Content-Security-Policy': "default-src 'none'; frame-ancestors 'none';",
-  'X-Content-Type-Options': 'nosniff',
-  'X-Frame-Options': 'DENY',
-  'Referrer-Policy': 'no-referrer'
-}
-
-// Input validation functions
-function validateJobData(data: any) {
-  if (!data.title || typeof data.title !== 'string') return false;
-  if (!data.company || typeof data.company !== 'string') return false;
-  if (!data.url || typeof data.url !== 'string') return false;
-  return true;
-}
-
-function sanitizeInput(input: string): string {
-  return input.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-              .replace(/javascript:/gi, '')
-              .replace(/on\w+\s*=/gi, '')
-              .trim();
-}
-
-// Advanced rate limiting
-interface RateLimit {
-  count: number;
-  resetTime: number;
-}
-
-const rateLimits = new Map<string, RateLimit>();
-const MAX_REQUESTS_PER_MINUTE = 60;
-const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
-
-function checkRateLimit(ip: string): boolean {
-  const now = Date.now();
-  const key = `rate_limit:${ip}`;
-  const limit = rateLimits.get(key);
-  
-  if (!limit || now > limit.resetTime) {
-    rateLimits.set(key, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
-    return true;
-  }
-  
-  if (limit.count >= MAX_REQUESTS_PER_MINUTE) {
-    return false;
-  }
-  
-  limit.count++;
-  return true;
-}
-
-// Webhook signature verification
-async function verifyWebhookSignature(
-  payload: string,
-  signature: string,
-  secret: string
-): Promise<boolean> {
-  if (!signature || !secret) return false;
-  
-  try {
-    const encoder = new TextEncoder();
-    const keyData = encoder.encode(secret);
-    const dataToSign = encoder.encode(payload);
-    
-    const cryptoKey = await crypto.subtle.importKey(
-      'raw',
-      keyData,
-      { name: 'HMAC', hash: 'SHA-256' },
-      false,
-      ['sign']
-    );
-    
-    const signatureBuffer = await crypto.subtle.sign('HMAC', cryptoKey, dataToSign);
-    const expectedSignature = Array.from(new Uint8Array(signatureBuffer))
-      .map(b => b.toString(16).padStart(2, '0'))
-      .join('');
-    
-    const cleanSignature = signature.replace(/^sha256=/, '');
-    return cleanSignature === expectedSignature;
-  } catch (error) {
-    console.error('Webhook signature verification failed:', error);
-    return false;
-  }
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
 serve(async (req) => {
-  // Security headers for all responses
-  const secureHeaders = {
-    ...corsHeaders,
-    'X-Content-Type-Options': 'nosniff',
-    'X-Frame-Options': 'DENY',
-    'Content-Type': 'application/json'
-  };
-
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: secureHeaders })
+    return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    // Enhanced rate limiting with security logging
-    const clientIP = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
-    if (!checkRateLimit(clientIP)) {
-      console.log(`Rate limit exceeded for IP: ${clientIP}`);
-      
-      // Log security event
-      const supabaseClient = createClient(
-        Deno.env.get('SUPABASE_URL') ?? '',
-        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-      );
-      
-      try {
-        await supabaseClient.rpc('log_security_event', {
-          _user_id: null,
-          _action: 'rate_limit_exceeded',
-          _resource: 'n8n-webhook',
-          _ip_address: clientIP,
-          _success: false,
-          _details: { timestamp: new Date().toISOString() }
-        });
-      } catch (error) {
-        console.error('Failed to log security event:', error);
-      }
-      
-      return new Response(
-        JSON.stringify({ error: 'Rate limit exceeded. Please try again later.' }),
-        { status: 429, headers: secureHeaders }
-      );
-    }
-
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
     )
 
-    // Get raw body for signature verification
-    const body = await req.text();
-    let requestData;
-    
-    try {
-      requestData = JSON.parse(body);
-    } catch (parseError) {
-      throw new Error('Invalid JSON payload');
-    }
+    const { action, data } = await req.json()
 
-    const { action, data } = requestData;
-
-    // Basic input validation
-    if (!action || typeof action !== 'string') {
-      throw new Error('Invalid action parameter')
-    }
-
-    // Sanitize action
-    const sanitizedAction = sanitizeInput(action)
-
-    // Get user context from authorization header if available
-    const authHeader = req.headers.get('Authorization');
-    let userId = null;
-    
-    if (authHeader) {
-      try {
-        const { data: { user } } = await supabaseClient.auth.getUser(authHeader.replace('Bearer ', ''));
-        userId = user?.id || null;
-      } catch (error) {
-        console.log('Failed to get user from auth header:', error);
-      }
-    }
-
-    // If no auth header, try to get user_id from data payload
-    if (!userId && data.userId) {
-      userId = data.userId;
-    }
-
-    // ENFORCE webhook signature verification (CRITICAL SECURITY FIX)
-    const webhookSecret = Deno.env.get('N8N_WEBHOOK_SECRET');
-    if (!webhookSecret) {
-      console.error('Webhook secret not configured - blocking request for security');
-      
-      // Log security event
-      try {
-        await supabaseClient.rpc('log_security_event', {
-          _user_id: userId,
-          _action: 'webhook_no_secret',
-          _resource: 'n8n-webhook',
-          _ip_address: clientIP,
-          _success: false,
-          _details: { error: 'Webhook secret not configured' }
-        });
-      } catch (error) {
-        console.error('Failed to log security event:', error);
-      }
-      
-      return new Response(
-        JSON.stringify({ error: 'Webhook signature verification required but not configured' }),
-        { status: 500, headers: secureHeaders }
-      );
-    }
-
-    const signature = req.headers.get('x-webhook-signature');
-    
-    if (!signature) {
-      console.error('Missing webhook signature');
-      
-      // Log security event
-      try {
-        await supabaseClient.rpc('log_security_event', {
-          _user_id: userId,
-          _action: 'webhook_missing_signature',
-          _resource: 'n8n-webhook',
-          _ip_address: clientIP,
-          _success: false,
-          _details: { error: 'Missing signature header' }
-        });
-      } catch (error) {
-        console.error('Failed to log security event:', error);
-      }
-      
-      return new Response(
-        JSON.stringify({ error: 'Missing webhook signature' }),
-        { status: 401, headers: secureHeaders }
-      );
-    }
-
-    const isValidSignature = await verifyWebhookSignature(body, signature, webhookSecret);
-    if (!isValidSignature) {
-      console.error('Invalid webhook signature');
-      
-      // Log security event
-      try {
-        await supabaseClient.rpc('log_security_event', {
-          _user_id: userId,
-          _action: 'webhook_invalid_signature',
-          _resource: 'n8n-webhook',
-          _ip_address: clientIP,
-          _success: false,
-          _details: { error: 'Invalid signature' }
-        });
-      } catch (error) {
-        console.error('Failed to log security event:', error);
-      }
-      
-      return new Response(
-        JSON.stringify({ error: 'Invalid webhook signature' }),
-        { status: 401, headers: secureHeaders }
-      );
-    }
-    
-    // Log the webhook action with user context
+    // Log the webhook action
     await supabaseClient
       .from('automation_logs')
       .insert({
         action: `n8n-${action}`,
         status: 'success',
         details: `Received n8n webhook for ${action}`,
-        metadata: data,
-        user_id: userId
+        metadata: data
       })
 
     console.log(`n8n webhook received: ${action}`, data)
 
-    switch (sanitizedAction) {
+    switch (action) {
       case 'job-found':
-        // Validate job data
-        if (!validateJobData(data)) {
-          throw new Error('Invalid job data provided')
-        }
-        
         // Insert new job from n8n scraping workflow
         const { error: jobError } = await supabaseClient
           .from('jobs')
           .insert({
-            title: sanitizeInput(data.title),
-            company: sanitizeInput(data.company),
-            url: data.url, // URL validation should be done separately
-            pay_range: data.payRange ? sanitizeInput(data.payRange) : null,
-            job_type: data.type ? sanitizeInput(data.type) : null,
+            title: data.title,
+            company: data.company,
+            url: data.url,
+            pay_range: data.payRange,
+            job_type: data.type,
             contact_email: data.contactEmail,
             contact_phone: data.contactPhone,
-            resume_required: data.resumeRequired || false,
-            notes: data.notes ? sanitizeInput(data.notes) : 'Found via n8n automation',
-            user_id: userId
+            resume_required: data.resumeRequired,
+            notes: data.notes || `Found via n8n automation`
           })
 
         if (jobError) throw jobError
@@ -336,20 +100,21 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({ success: true, message: `Processed ${action}` }),
-      { headers: secureHeaders, status: 200 }
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      },
     )
 
   } catch (error) {
     console.error('n8n webhook error:', error)
     
-    // Don't expose internal error details
-    const errorMessage = error instanceof Error ? 
-      (error.message.includes('Invalid') ? error.message : 'Internal server error') : 
-      'Internal server error';
-    
     return new Response(
-      JSON.stringify({ error: errorMessage }),
-      { headers: secureHeaders, status: error.message.includes('Invalid') ? 400 : 500 }
+      JSON.stringify({ error: error.message }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      },
     )
   }
 })
