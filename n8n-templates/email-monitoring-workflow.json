@@ -48,7 +48,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "YOUR_JJMAPPLYX_URL/functions/v1/n8n-webhook",
+        "url": "https://tzvzranspvtifnlgrkwi.supabase.co/functions/v1/n8n-webhook",
         "body": {
           "action": "interview-detected",
           "data": "={{$json}}"
