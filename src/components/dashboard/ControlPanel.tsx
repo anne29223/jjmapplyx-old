@@ -50,8 +50,10 @@ export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSetting
   };
 
   const handleSettingsUpdate = (newSettings: any) => {
+    console.log('Updating settings:', newSettings);
     updateSettings(newSettings, {
-      onSuccess: () => {
+      onSuccess: (data) => {
+        console.log('Settings update successful:', data);
         onUpdateSettings(newSettings);
         toast({
           title: "Settings Updated",
@@ -59,6 +61,7 @@ export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSetting
         });
       },
       onError: (error) => {
+        console.error('Settings update failed:', error);
         toast({
           title: "Error",
           description: "Failed to update settings.",
@@ -171,15 +174,14 @@ export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSetting
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="n8n-webhook">n8n Webhook URL</Label>
-              <Input
+               <Input
                 id="n8n-webhook"
                 placeholder="https://your-n8n-instance.com/webhook/..."
-                value={safeSettings.n8n_webhook_url || "https://n8n.jjmapplyx.com"}
+                value={safeSettings.n8n_webhook_url || ""}
                 onChange={(e) => {
                   const updatedSettings = { ...safeSettings, n8n_webhook_url: e.target.value };
                   handleSettingsUpdate(updatedSettings);
                 }}
-                disabled={false}
               />
               <p className="text-xs text-muted-foreground">
                 This webhook will receive job application triggers from the dashboard
