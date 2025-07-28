@@ -17,37 +17,37 @@ export const StatsCards = ({ stats }: StatsCardsProps) => {
   const cards = [
     {
       title: "Total Jobs Found",
-      value: stats.totalJobs.toString(),
+      value: (stats?.totalJobs || 0).toString(),
       icon: Target,
       color: "text-primary"
     },
     {
       title: "Auto Applied",
-      value: stats.applied.toString(),
+      value: (stats?.applied || 0).toString(),
       icon: CheckCircle,
       color: "text-success"
     },
     {
       title: "Pending Queue",
-      value: stats.pending.toString(),
+      value: (stats?.pending || 0).toString(),
       icon: Clock,
       color: "text-warning"
     },
     {
       title: "Success Rate",
-      value: `${stats.successRate}%`,
+      value: `${stats?.successRate || 0}%`,
       icon: TrendingUp,
       color: "text-info"
     },
     {
       title: "Automation Runs",
-      value: (stats.automationRuns || 0).toString(),
+      value: (stats?.automationRuns || 0).toString(),
       icon: Zap,
       color: "text-accent"
     },
     {
       title: "Webhooks Fired",
-      value: (stats.webhooksTriggered || 0).toString(),
+      value: (stats?.webhooksTriggered || 0).toString(),
       icon: Webhook,
       color: "text-primary"
     }
