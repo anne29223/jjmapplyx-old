@@ -175,9 +175,11 @@ export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSetting
                 id="n8n-webhook"
                 placeholder="https://your-n8n-instance.com/webhook/..."
                 value={safeSettings.n8n_webhook_url || ""}
-                onChange={(e) =>
-                  handleSettingsUpdate({ ...safeSettings, n8n_webhook_url: e.target.value })
-                }
+                onChange={(e) => {
+                  const updatedSettings = { ...safeSettings, n8n_webhook_url: e.target.value };
+                  handleSettingsUpdate(updatedSettings);
+                }}
+                disabled={false}
               />
               <p className="text-xs text-muted-foreground">
                 This webhook will receive job application triggers from the dashboard
