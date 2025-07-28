@@ -9,6 +9,7 @@ import { ResumeManager } from "./ResumeManager";
 import { Bot, Settings, Play, Pause, Webhook, Zap, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useUpdateSettings, useTriggerN8N } from "@/hooks/useSupabase";
+import { useState } from "react";
 
 interface ControlPanelProps {
   isRunning: boolean;
@@ -48,6 +49,9 @@ export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSetting
     webhook_power_automate: '',
     n8n_webhook_url: ''
   };
+
+  // Local state for inputs to prevent focus issues
+  const [localN8nUrl, setLocalN8nUrl] = useState(safeSettings.n8n_webhook_url || '');
 
   const handleSettingsUpdate = (newSettings: any) => {
     console.log('Updating settings:', newSettings);
@@ -172,21 +176,22 @@ export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSetting
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="n8n-webhook">n8n Webhook URL</Label>
-               <Input
-                id="n8n-webhook"
-                placeholder="https://your-n8n-instance.com/webhook/..."
-                value={safeSettings.n8n_webhook_url || ""}
-                onChange={(e) => {
-                  const updatedSettings = { ...safeSettings, n8n_webhook_url: e.target.value };
-                  handleSettingsUpdate(updatedSettings);
-                }}
-              />
-              <p className="text-xs text-muted-foreground">
-                This webhook will receive job application triggers from the dashboard
-              </p>
-            </div>
+             <div className="space-y-2">
+               <Label htmlFor="n8n-webhook">n8n Webhook URL</Label>
+                <Input
+                 id="n8n-webhook"
+                 placeholder="https://your-n8n-instance.com/webhook/..."
+                 value={localN8nUrl}
+                 onChange={(e) => setLocalN8nUrl(e.target.value)}
+                 onBlur={(e) => {
+                   const updatedSettings = { ...safeSettings, n8n_webhook_url: e.target.value };
+                   handleSettingsUpdate(updatedSettings);
+                 }}
+               />
+               <p className="text-xs text-muted-foreground">
+                 This webhook will receive job application triggers from the dashboard
+               </p>
+             </div>
             <div className="flex gap-2">
               <Button 
                 size="sm" 
