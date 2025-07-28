@@ -32,10 +32,19 @@ export const TestWebhook = () => {
         description: `${workflow} workflow test completed`,
       });
     } catch (error) {
+      console.error(`Test failed for ${workflow}:`, error);
       setTestResults(prev => ({ ...prev, [workflow]: 'error' }));
+      
+      let errorMessage = 'Unknown error';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+      
       toast({
         title: "Test failed",
-        description: `${workflow} workflow test failed: ${error}`,
+        description: `${workflow} workflow test failed: ${errorMessage}`,
         variant: "destructive",
       });
     }
