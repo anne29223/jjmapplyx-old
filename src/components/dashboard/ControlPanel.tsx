@@ -177,7 +177,7 @@ export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSetting
                <Input
                 id="n8n-webhook"
                 placeholder="https://your-n8n-instance.com/webhook/..."
-                value={safeSettings.n8n_webhook_url || ""}
+                value={safeSettings.n8n_webhook_url || "https://jjmapplyx.app.n8n.cloud"}
                 onChange={(e) => {
                   const updatedSettings = { ...safeSettings, n8n_webhook_url: e.target.value };
                   handleSettingsUpdate(updatedSettings);
