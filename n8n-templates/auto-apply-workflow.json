@@ -1,5 +1,5 @@
 {
-  "name": "Auto Apply Workflow",
+  "name": "auto-apply-workflow",
   "nodes": [
     {
       "parameters": {
@@ -8,11 +8,14 @@
         "responseMode": "responseNode",
         "options": {}
       },
-      "id": "webhook-trigger",
+      "id": "a8b40e99-9692-447f-9cf4-ddaa3ee926ed",
       "name": "Webhook Trigger",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 1,
-      "position": [250, 300],
+      "position": [
+        -176,
+        272
+      ],
       "webhookId": "auto-apply-webhook"
     },
     {
@@ -22,21 +25,27 @@
           "timeout": 15000
         }
       },
-      "id": "load-job-page",
+      "id": "0d344dc3-6da7-4743-b4c0-20f44003bf92",
       "name": "Load Job Page",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 3,
-      "position": [450, 300]
+      "position": [
+        32,
+        272
+      ]
     },
     {
       "parameters": {
         "jsCode": "// Check if application is possible\nconst html = $input.first().json.body;\nconst jobData = $input.first().json;\n\n// Look for application buttons/links\nconst applyButtonRegex = /(apply|submit|join)/i;\nconst hasApplyButton = applyButtonRegex.test(html);\n\n// Check if resume is required\nconst resumeRequired = /resume|cv|upload.*file/i.test(html);\n\n// Check if it's an external redirect\nconst isExternal = html.includes('external-apply') || html.includes('redirect');\n\nreturn [{\n  json: {\n    ...jobData,\n    canApply: hasApplyButton && !isExternal,\n    resumeRequired: resumeRequired,\n    requiresManualReview: isExternal\n  }\n}];"
       },
-      "id": "analyze-application",
+      "id": "f3830cb9-c1af-42ef-9bf5-8460a72f902f",
       "name": "Analyze Application",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [650, 300]
+      "position": [
+        224,
+        272
+      ]
     },
     {
       "parameters": {
@@ -60,72 +69,62 @@
         },
         "options": {}
       },
-      "id": "can-apply-check",
+      "id": "f2948de2-e719-4346-af27-330045179983",
       "name": "Can Apply?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [850, 300]
+      "position": [
+        432,
+        272
+      ]
     },
     {
       "parameters": {
         "method": "POST",
         "url": "https://tzvzranspvtifnlgrkwi.supabase.co/functions/v1/n8n-webhook",
-        "body": {
-          "action": "application-submitted",
-          "data": {
-            "jobId": "={{$json.jobId}}",
-            "status": "applied",
-            "appliedAt": "={{new Date().toISOString()}}"
-          }
-        },
-        "options": {
-          "headers": {
-            "Content-Type": "application/json"
-          }
-        }
+        "options": {}
       },
-      "id": "report-success",
+      "id": "f4adbd20-af23-43a5-a496-cfc01cfef0ef",
       "name": "Report Success",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 3,
-      "position": [1050, 200]
+      "position": [
+        624,
+        160
+      ]
     },
     {
       "parameters": {
         "method": "POST",
         "url": "https://tzvzranspvtifnlgrkwi.supabase.co/functions/v1/n8n-webhook",
-        "body": {
-          "action": "application-failed",
-          "data": {
-            "jobId": "={{$json.jobId}}",
-            "status": "failed",
-            "reason": "Cannot auto-apply"
-          }
-        },
-        "options": {
-          "headers": {
-            "Content-Type": "application/json"
-          }
-        }
+        "options": {}
       },
-      "id": "report-failure",
+      "id": "48c36d76-0de4-49b1-8f9a-8d069cc07b43",
       "name": "Report Failure",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 3,
-      "position": [1050, 400]
+      "position": [
+        624,
+        368
+      ]
     },
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={\"success\": true, \"message\": \"Application processed\"}"
+        "responseBody": "={\"success\": true, \"message\": \"Application processed\"}",
+        "options": {}
       },
-      "id": "response",
+      "id": "a29ad648-993f-4ab3-90d9-f3e94f5ac89a",
       "name": "Response",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
-      "position": [1250, 300]
+      "position": [
+        832,
+        272
+      ]
     }
   ],
+  "pinData": {},
   "connections": {
     "Webhook Trigger": {
       "main": [
@@ -201,10 +200,14 @@
       ]
     }
   },
-  "settings": {},
-  "staticData": null,
-  "tags": [],
-  "triggerCount": 0,
-  "updatedAt": "2024-01-01T00:00:00.000Z",
-  "versionId": "1"
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "b7c93014-2f27-49cc-aea8-17a137f62155",
+  "meta": {
+    "instanceId": "34422b5d0739e80dd8c67e3b4b210d804ca4de352d0fdb0e552022accead2f3c"
+  },
+  "id": "HBraIHW9OulysAeL",
+  "tags": []
 }
