@@ -1,5 +1,5 @@
 {
-  "name": "Job Scraping Workflow",
+  "name": "Remote Jobs Scraping Workflow",
   "nodes": [
     {
       "parameters": {},
@@ -11,23 +11,23 @@
     },
     {
       "parameters": {
-        "url": "https://www.indeed.com/jobs?q={{$node.Start.json.query}}&l={{$node.Start.json.location}}",
+        "url": "https://remoteok.io/api",
         "options": {
           "timeout": 10000
         }
       },
-      "id": "scrape-indeed",
-      "name": "Scrape Indeed",
+      "id": "scrape-remoteok",
+      "name": "Scrape RemoteOK",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 3,
       "position": [450, 300]
     },
     {
       "parameters": {
-        "jsCode": "// Parse job listings from Indeed HTML\nconst html = $input.first().json.body;\nconst jobs = [];\n\n// Simple regex to extract job data (in production, use proper HTML parser)\nconst titleRegex = /<h2[^>]*data-jk=\"([^\"]*)\">.*?<span title=\"([^\"]*)\"/g;\nconst companyRegex = /<span class=\"companyName\">.*?<a[^>]*>([^<]*)<\\/a>/g;\n\nlet match;\nwhile ((match = titleRegex.exec(html)) !== null) {\n  const jobId = match[1];\n  const title = match[2];\n  \n  // Extract company name\n  const companyMatch = companyRegex.exec(html);\n  const company = companyMatch ? companyMatch[1] : 'Unknown';\n  \n  jobs.push({\n    id: jobId,\n    title: title,\n    company: company,\n    url: `https://www.indeed.com/job/${jobId}`,\n    source: 'indeed',\n    dateFound: new Date().toISOString()\n  });\n}\n\nreturn jobs.map(job => ({ json: job }));"
+        "jsCode": "// Parse job listings from RemoteOK API\nconst data = $input.first().json;\nconst jobs = [];\n\n// RemoteOK returns JSON array, skip first item (legal notice)\nconst jobListings = Array.isArray(data) ? data.slice(1) : [];\n\nfor (const job of jobListings) {\n  if (job && job.id && job.position) {\n    jobs.push({\n      id: job.id.toString(),\n      title: job.position,\n      company: job.company || 'Unknown',\n      location: job.location || 'Remote',\n      url: `https://remoteok.io/remote-jobs/${job.id}`,\n      description: job.description || '',\n      tags: job.tags || [],\n      salary: job.salary_min && job.salary_max ? `$${job.salary_min} - $${job.salary_max}` : '',\n      source: 'remoteok',\n      dateFound: new Date().toISOString(),\n      datePosted: job.date ? new Date(job.date * 1000).toISOString() : null\n    });\n  }\n}\n\nreturn jobs.map(job => ({ json: job }));"
       },
       "id": "parse-jobs",
-      "name": "Parse Jobs",
+      "name": "Parse Remote Jobs",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [650, 300]
@@ -60,25 +60,25 @@
       "main": [
         [
           {
-            "node": "Scrape Indeed",
+            "node": "Scrape RemoteOK",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Scrape Indeed": {
+    "Scrape RemoteOK": {
       "main": [
         [
           {
-            "node": "Parse Jobs",
+            "node": "Parse Remote Jobs",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Parse Jobs": {
+    "Parse Remote Jobs": {
       "main": [
         [
           {
