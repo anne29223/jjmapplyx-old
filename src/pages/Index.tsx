@@ -16,9 +16,6 @@ const Index = () => {
             alt="JJMapplyx - Land Jobs. No Interviews. All Auto." 
             className="mx-auto mb-6 rounded-lg shadow-lg max-w-2xl w-full"
           />
-          <Badge variant="secondary" className="mb-6">
-            Pre-release now live
-          </Badge>
         </div>
 
         {/* Action Buttons */}
