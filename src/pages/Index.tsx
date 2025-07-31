@@ -51,6 +51,25 @@ const Index = () => {
           <p className="text-sm text-muted-foreground mt-2">Coming Soon</p>
         </div>
       </div>
+
+      {/* Footer */}
+      <footer className="bg-muted/30 border-t border-border mt-auto">
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center">
+            <h3 className="font-semibold text-lg mb-2">JJMapplyx</h3>
+            <p className="text-muted-foreground mb-4">Land Jobs. No Interviews. All Auto.</p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center text-sm text-muted-foreground">
+              <span>© 2024 JJMapplyx. All rights reserved.</span>
+              <span className="hidden sm:inline">•</span>
+              <a href="#" className="hover:text-foreground transition-colors">Privacy Policy</a>
+              <span className="hidden sm:inline">•</span>
+              <a href="#" className="hover:text-foreground transition-colors">Terms of Service</a>
+              <span className="hidden sm:inline">•</span>
+              <a href="#" className="hover:text-foreground transition-colors">Contact</a>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };
