@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
@@ -53,22 +54,12 @@ const Index = () => {
       </div>
 
       {/* Footer */}
-      <footer className="bg-muted/30 border-t border-border mt-auto">
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center">
-            <h3 className="font-semibold text-lg mb-2">JJMapplyx</h3>
-            <p className="text-muted-foreground mb-4">Land Jobs. No Interviews. All Auto.</p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center text-sm text-muted-foreground">
-              <span>© 2024 JJMapplyx. All rights reserved.</span>
-              <span className="hidden sm:inline">•</span>
-              <a href="#" className="hover:text-foreground transition-colors">Privacy Policy</a>
-              <span className="hidden sm:inline">•</span>
-              <a href="#" className="hover:text-foreground transition-colors">Terms of Service</a>
-              <span className="hidden sm:inline">•</span>
-              <a href="#" className="hover:text-foreground transition-colors">Contact</a>
-            </div>
-          </div>
-        </div>
+      <footer className="text-center py-5 text-sm text-muted-foreground">
+        <p>© 2025 JJM Tech. All rights reserved.</p>
+        <p className="mt-2">
+          <a href="/privacy-policy" className="mr-4 hover:text-foreground transition-colors">Privacy Policy</a>
+          <a href="/terms-of-use" className="hover:text-foreground transition-colors">Terms of Use</a>
+        </p>
       </footer>
     </div>
   );
