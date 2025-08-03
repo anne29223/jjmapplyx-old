@@ -33,7 +33,7 @@ serve(async (req) => {
       .from('user_settings')
       .select('n8n_webhook_url, email, phone')
       .eq('user_id', user.id)
-      .single()
+      .maybeSingle()
 
     console.log('User settings query result:', { settings, settingsError })
 
@@ -42,7 +42,12 @@ serve(async (req) => {
       throw new Error(`Failed to fetch user settings: ${settingsError.message}`)
     }
 
-    if (!settings?.n8n_webhook_url) {
+    if (!settings) {
+      console.error('No user settings found for user:', user.id)
+      throw new Error('User settings not found. Please configure your settings in the dashboard first.')
+    }
+
+    if (!settings.n8n_webhook_url) {
       console.error('No n8n webhook URL found for user:', user.id)
       throw new Error('n8n webhook URL not configured. Please set it in the dashboard settings.')
     }
