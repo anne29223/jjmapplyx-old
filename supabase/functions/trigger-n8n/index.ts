@@ -28,14 +28,23 @@ serve(async (req) => {
     const { workflow, jobData } = await req.json()
 
     // Get user settings for n8n webhook URL
-    const { data: settings } = await supabaseClient
+    console.log('Looking for user settings for user ID:', user.id)
+    const { data: settings, error: settingsError } = await supabaseClient
       .from('user_settings')
       .select('n8n_webhook_url, email, phone')
       .eq('user_id', user.id)
       .single()
 
+    console.log('User settings query result:', { settings, settingsError })
+
+    if (settingsError) {
+      console.error('Settings query error:', settingsError)
+      throw new Error(`Failed to fetch user settings: ${settingsError.message}`)
+    }
+
     if (!settings?.n8n_webhook_url) {
-      throw new Error('n8n webhook URL not configured')
+      console.error('No n8n webhook URL found for user:', user.id)
+      throw new Error('n8n webhook URL not configured. Please set it in the dashboard settings.')
     }
 
     // Prepare payload for n8n
