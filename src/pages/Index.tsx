@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import brandingHeader from "@/assets/jjmapplyx-branding-header.jpg";
+import { Twitter, Linkedin, Github, Mail } from "lucide-react";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -55,11 +56,40 @@ const Index = () => {
 
       {/* Footer */}
       <footer className="text-center py-5 text-sm text-muted-foreground">
-        <p>© 2025 JJM Tech. All rights reserved.</p>
-        <p className="mt-2">
-          <a href="/privacy-policy" className="mr-4 hover:text-foreground transition-colors">Privacy Policy</a>
-          <a href="/terms-of-use" className="hover:text-foreground transition-colors">Terms of Use</a>
-        </p>
+        <div className="flex flex-col items-center gap-3">
+          <p>© 2025 JJM Tech. All rights reserved.</p>
+          <nav aria-label="Legal" className="space-x-4">
+            <a href="/privacy-policy" className="hover:text-foreground transition-colors">Privacy Policy</a>
+            <a href="/terms-of-use" className="hover:text-foreground transition-colors">Terms of Use</a>
+          </nav>
+          <nav aria-label="Social links" className="flex items-center gap-4">
+            <a
+              href="https://x.com/JJMapplyx"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Follow JJMapplyx on X"
+              className="hover:text-foreground transition-colors"
+            >
+              <Twitter className="h-4 w-4" />
+            </a>
+            <a
+              href="#"
+              aria-label="LinkedIn (provide URL to enable)"
+              className="hover:text-foreground transition-colors opacity-60 cursor-not-allowed"
+              title="LinkedIn coming soon"
+            >
+              <Linkedin className="h-4 w-4" />
+            </a>
+            <a
+              href="#"
+              aria-label="GitHub (provide URL to enable)"
+              className="hover:text-foreground transition-colors opacity-60 cursor-not-allowed"
+              title="GitHub coming soon"
+            >
+              <Github className="h-4 w-4" />
+            </a>
+          </nav>
+        </div>
       </footer>
     </div>
   );
