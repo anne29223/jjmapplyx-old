@@ -109,7 +109,7 @@ export const AuthGuard = ({ children }: AuthGuardProps) => {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle className="text-center">JJMapplyx Authentication</CardTitle>
@@ -167,6 +167,7 @@ export const AuthGuard = ({ children }: AuthGuardProps) => {
             </Tabs>
           </CardContent>
         </Card>
+        <p className="mt-6 text-xs text-muted-foreground">© 2025 JJM Tech. All rights reserved.</p>
       </div>
     );
   }

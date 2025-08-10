@@ -61,6 +61,7 @@ const Index = () => {
           <nav aria-label="Legal" className="space-x-4">
             <a href="/privacy-policy" className="hover:text-foreground transition-colors">Privacy Policy</a>
             <a href="/terms-of-use" className="hover:text-foreground transition-colors">Terms of Use</a>
+            <a href="/docs" className="hover:text-foreground transition-colors">Documentation</a>
           </nav>
           <nav aria-label="Social links" className="flex items-center gap-4">
             <a
