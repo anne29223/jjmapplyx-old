@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Globe, Plus, X, Settings } from "lucide-react";
-
+import { useJobSites, useAddJobSite, useToggleJobSite, useRemoveJobSite, useBulkUpsertJobSites } from "@/hooks/useSupabase";
 interface JobSite {
   id: string;
   name: string;
@@ -16,52 +16,34 @@ interface JobSite {
 }
 
 export const JobSiteConfig = () => {
-  const [jobSites, setJobSites] = useState<JobSite[]>([
-    {
-      id: '1',
-      name: 'Indeed',
-      url: 'https://indeed.com',
-      enabled: true,
-      keywords: ['software engineer', 'developer'],
-      location: 'Remote'
-    },
-    {
-      id: '2',
-      name: 'LinkedIn',
-      url: 'https://linkedin.com/jobs',
-      enabled: true,
-      keywords: ['react', 'frontend'],
-      location: 'New York'
-    }
-  ]);
+  const { data: jobSites = [], isLoading } = useJobSites();
+  const addMutation = useAddJobSite();
+  const toggleMutation = useToggleJobSite();
+  const removeMutation = useRemoveJobSite();
+  const bulkPresetMutation = useBulkUpsertJobSites();
 
   const [newSite, setNewSite] = useState({ name: '', url: '', keywords: '', location: '' });
 
   const addJobSite = () => {
     if (newSite.name && newSite.url) {
-      const site: JobSite = {
-        id: Date.now().toString(),
+      const keywordsArr = newSite.keywords.split(',').map(k => k.trim()).filter(k => k)
+      addMutation.mutate({
         name: newSite.name,
         url: newSite.url,
         enabled: true,
-        keywords: newSite.keywords.split(',').map(k => k.trim()).filter(k => k),
+        keywords: keywordsArr,
         location: newSite.location || 'Remote'
-      };
-      setJobSites([...jobSites, site]);
-      setNewSite({ name: '', url: '', keywords: '', location: '' });
+      })
+      setNewSite({ name: '', url: '', keywords: '', location: '' })
     }
   };
 
-  const toggleSite = (id: string) => {
-    setJobSites(sites =>
-      sites.map(site =>
-        site.id === id ? { ...site, enabled: !site.enabled } : site
-      )
-    );
+  const toggleSite = (id: string, enabled: boolean) => {
+    toggleMutation.mutate({ id, enabled })
   };
 
   const removeSite = (id: string) => {
-    setJobSites(sites => sites.filter(site => site.id !== id));
+    removeMutation.mutate(id)
   };
 
   return (
@@ -100,7 +82,7 @@ export const JobSiteConfig = () => {
               <div className="flex items-center gap-2">
                 <Switch
                   checked={site.enabled}
-                  onCheckedChange={() => toggleSite(site.id)}
+                  onCheckedChange={(checked) => toggleSite(site.id, checked)}
                 />
                 <Button size="sm" variant="ghost" onClick={() => removeSite(site.id)}>
                   <X className="h-4 w-4" />
@@ -140,12 +122,31 @@ export const JobSiteConfig = () => {
             <Plus className="h-4 w-4 mr-2" />
             Add Job Site
           </Button>
+          <Button
+            variant="outline"
+            className="w-full mt-2"
+            size="sm"
+            onClick={() =>
+              bulkPresetMutation.mutate([
+                { name: 'Snagajob', url: 'https://www.snagajob.com', keywords: ['hourly','no interview','immediate hire'] },
+                { name: 'Instawork', url: 'https://www.instawork.com', keywords: ['gig','shift','hourly'] },
+                { name: 'Wonolo', url: 'https://www.wonolo.com', keywords: ['gig','warehouse','immediate'] },
+                { name: 'Shiftsmart', url: 'https://www.shiftsmart.com', keywords: ['shift work','hourly','retail'] },
+                { name: 'TaskRabbit', url: 'https://www.taskrabbit.com', keywords: ['task','gig','handyman'] },
+                { name: 'SimplyHired', url: 'https://www.simplyhired.com', keywords: ['hourly','entry level','no experience'] },
+                { name: 'Jobcase', url: 'https://www.jobcase.com', keywords: ['hourly','retail','warehouse'] },
+                { name: 'PeopleReady', url: 'https://www.peopleready.com', keywords: ['day labor','warehouse','construction'] }
+              ])
+            }
+          >
+            Add Hourly/Gig Presets
+          </Button>
         </div>
 
         <div className="text-xs text-muted-foreground">
           <p>• Configure which job sites to scrape automatically</p>
           <p>• Keywords help filter relevant job postings</p>
-          <p>• Disabled sites will be skipped during automation</p>
+          <p>• Enabled sites are iterated in your n8n workflow when triggering automation</p>
         </div>
       </CardContent>
     </Card>

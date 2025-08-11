@@ -49,6 +49,17 @@ const Docs = () => {
         </section>
 
         <section className="mb-8">
+          <h2 className="text-xl font-semibold">Job boards configuration</h2>
+          <ol className="list-decimal pl-6 text-sm text-muted-foreground mt-2 space-y-1">
+            <li>Open Dashboard → Site Config tab.</li>
+            <li>Add or paste boards: name, URL, keywords (comma‑separated), and optional location.</li>
+            <li>Toggle boards on/off. Enabled boards are iterated when you trigger automations.</li>
+            <li>Use “Add Hourly/Gig Presets” to quickly add Snagajob, Instawork, Wonolo, Shiftsmart, TaskRabbit, SimplyHired, Jobcase, PeopleReady.</li>
+            <li>In Settings, set your n8n webhook URL. The trigger will loop across all enabled boards automatically.</li>
+          </ol>
+        </section>
+
+        <section className="mb-8">
           <h2 className="text-xl font-semibold">Troubleshooting</h2>
           <ul className="list-disc pl-6 text-sm text-muted-foreground mt-2">
             <li>Check Automation Logs in the Dashboard</li>

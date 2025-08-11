@@ -138,3 +138,109 @@ export const useTriggerN8N = () => {
     }
   })
 }
+
+// Job Sites hooks
+export const useJobSites = () => {
+  return useQuery({
+    queryKey: ['job_sites'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return []
+      const { data, error } = await supabase
+        .from('job_sites')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: true })
+      if (error) throw error
+      return data
+    }
+  })
+}
+
+export const useAddJobSite = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (site: { name: string; url: string; keywords?: string[]; location?: string; enabled?: boolean }) => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+      const { data, error } = await supabase
+        .from('job_sites')
+        .upsert({
+          user_id: user.id,
+          name: site.name,
+          url: site.url,
+          keywords: site.keywords ?? [],
+          location: site.location ?? null,
+          enabled: site.enabled ?? true
+        }, { onConflict: 'user_id,url' })
+        .select()
+      if (error) throw error
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['job_sites'] })
+    }
+  })
+}
+
+export const useToggleJobSite = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, enabled }: { id: string; enabled: boolean }) => {
+      const { data, error } = await supabase
+        .from('job_sites')
+        .update({ enabled, updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .select()
+      if (error) throw error
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['job_sites'] })
+    }
+  })
+}
+
+export const useRemoveJobSite = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('job_sites')
+        .delete()
+        .eq('id', id)
+      if (error) throw error
+      return true
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['job_sites'] })
+    }
+  })
+}
+
+export const useBulkUpsertJobSites = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (sites: Array<{ name: string; url: string; keywords?: string[]; location?: string }>) => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+      const payload = sites.map(s => ({
+        user_id: user.id,
+        name: s.name,
+        url: s.url,
+        keywords: s.keywords ?? [],
+        location: s.location ?? null,
+        enabled: true
+      }))
+      const { data, error } = await supabase
+        .from('job_sites')
+        .upsert(payload, { onConflict: 'user_id,url' })
+        .select()
+      if (error) throw error
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['job_sites'] })
+    }
+  })
+}

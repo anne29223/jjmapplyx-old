@@ -52,8 +52,21 @@ serve(async (req) => {
       throw new Error('n8n webhook URL not configured. Please set it in the dashboard settings.')
     }
 
-    // Prepare payload for n8n
-    const payload = {
+    // Load enabled job sites for user
+    const { data: dbSites, error: sitesError } = await supabaseClient
+      .from('job_sites')
+      .select('name, url, keywords, location')
+      .eq('user_id', user.id)
+      .eq('enabled', true)
+      .order('created_at', { ascending: true })
+
+    if (sitesError) {
+      console.error('Failed to fetch job sites:', sitesError)
+    }
+
+    const jobSites = dbSites || []
+
+    const payloadBase = {
       workflow,
       user: {
         id: user.id,
@@ -65,17 +78,32 @@ serve(async (req) => {
       source: 'jjmapplyx-dashboard'
     }
 
-    // Trigger n8n workflow
-    const response = await fetch(settings.n8n_webhook_url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload)
-    })
+    let sentCount = 0
 
-    if (!response.ok) {
-      throw new Error(`n8n webhook failed: ${response.statusText}`)
+    if (jobSites.length > 0) {
+      // Iterate over enabled job sites and trigger n8n per site
+      for (const site of jobSites) {
+        const response = await fetch(settings.n8n_webhook_url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...payloadBase, site })
+        })
+        if (!response.ok) {
+          throw new Error(`n8n webhook failed for ${site.name}: ${response.statusText}`)
+        }
+        sentCount++
+      }
+    } else {
+      // Fallback: trigger once without site-specific data
+      const response = await fetch(settings.n8n_webhook_url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payloadBase)
+      })
+      if (!response.ok) {
+        throw new Error(`n8n webhook failed: ${response.statusText}`)
+      }
+      sentCount = 1
     }
 
     // Log the action
@@ -84,8 +112,8 @@ serve(async (req) => {
       .insert({
         action: `Triggered n8n ${workflow}`,
         status: 'success',
-        details: `Successfully triggered n8n workflow: ${workflow}`,
-        metadata: { workflow, jobId: jobData?.id }
+        details: `Triggered n8n workflow '${workflow}' for ${sentCount} site(s)`,
+        metadata: { workflow, jobId: jobData?.id, sitesCount: sentCount }
       })
 
     // Update stats
@@ -102,7 +130,7 @@ serve(async (req) => {
         .from('automation_stats')
         .update({
           automation_runs: currentStats.automation_runs + 1,
-          webhooks_triggered: currentStats.webhooks_triggered + 1
+          webhooks_triggered: currentStats.webhooks_triggered + sentCount
         })
         .eq('id', currentStats.id)
     } else {
@@ -111,7 +139,7 @@ serve(async (req) => {
         .insert({
           user_id: user.id,
           automation_runs: 1,
-          webhooks_triggered: 1,
+          webhooks_triggered: sentCount,
           date: today
         })
     }
@@ -119,7 +147,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: `n8n ${workflow} workflow triggered successfully` 
+        message: `n8n ${workflow} workflow triggered for ${sentCount} site(s)` 
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
