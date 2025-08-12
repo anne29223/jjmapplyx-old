@@ -115,7 +115,7 @@ export const TestWebhook = () => {
         ))}
         
         <div className="text-xs text-muted-foreground mt-4">
-          <p>• Tests send sample data to verify n8n connectivity</p>
+          <p>• Tests send sample data to verify webhook connectivity</p>
           <p>• Check automation logs for detailed results</p>
         </div>
       </CardContent>

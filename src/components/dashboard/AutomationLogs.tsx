@@ -88,7 +88,7 @@ export const AutomationLogs = () => {
             <div className="text-center py-8 text-muted-foreground">
               <Zap className="h-8 w-8 mx-auto mb-2 opacity-50" />
               <p>No automation activity yet</p>
-              <p className="text-sm">Configure n8n webhooks and start automation to see logs</p>
+              <p className="text-sm">Configure your automation webhook and start a run to see logs</p>
             </div>
           )}
         </div>
