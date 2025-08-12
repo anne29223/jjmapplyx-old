@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { ResumeManager } from "./ResumeManager";
 import { Bot, Settings, Play, Pause, Webhook, Zap, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useUpdateSettings, useTriggerN8N } from "@/hooks/useSupabase";
+import { useUpdateSettings, useTriggerN8N, supabase } from "@/hooks/useSupabase";
 import { useState } from "react";
 
 interface ControlPanelProps {
@@ -77,17 +77,26 @@ export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSetting
 
   const handleStartN8NWorkflow = async (workflow: string) => {
     try {
-      await triggerN8N({ workflow });
-      toast({
-        title: "Automation Triggered",
-        description: `${workflow} workflow started via webhook.`,
-      });
+      if (localN8nUrl && localN8nUrl.trim().length > 0) {
+        await triggerN8N({ workflow })
+        toast({
+          title: "Automation Triggered",
+          description: `${workflow} workflow started via your webhook provider.`,
+        })
+      } else {
+        const { data, error } = await supabase.functions.invoke('run-automation', { body: { workflow } })
+        if (error) throw error
+        toast({
+          title: "Built-in Automation Running",
+          description: `${workflow} started with the built-in runner (no external tool needed).`,
+        })
+      }
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to trigger automation. Check your webhook URL.",
+        description: "Failed to start automation. Check settings and try again.",
         variant: "destructive"
-      });
+      })
     }
   };
 

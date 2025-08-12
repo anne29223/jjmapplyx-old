@@ -40,11 +40,12 @@ const Docs = () => {
         <section className="mb-8">
           <h2 className="text-xl font-semibold">Automation integration (free)</h2>
           <p className="text-muted-foreground mt-2">
-            Works with Pipedream (free), n8n, or Make.com. Paste your inbound webhook URL in Dashboard → Automation Webhook URL.
+            Works with Pipedream (free), n8n, or Make.com. Or use the built-in runner with no external tools.
           </p>
           <ul className="list-disc pl-6 text-sm text-muted-foreground mt-2">
             <li>Receive results: <code>https://tzvzranspvtifnlgrkwi.supabase.co/functions/v1/n8n-webhook</code> (send header <code>x-n8n-secret</code>)</li>
             <li>Trigger provider: via Dashboard buttons → calls <code>/functions/v1/trigger-n8n</code></li>
+            <li>No external tool? Leave the webhook field empty and click the Start buttons — the built-in automation will run.</li>
           </ul>
           <div className="mt-4 space-y-2 text-sm text-muted-foreground">
             <p className="font-medium">Pipedream quick start</p>
@@ -71,10 +72,11 @@ const Docs = () => {
         <section className="mb-8">
           <h2 className="text-xl font-semibold">Run automations</h2>
           <ol className="list-decimal pl-6 text-sm text-muted-foreground mt-2 space-y-1">
-            <li>Paste your provider webhook URL into Dashboard → Automation Webhook URL.</li>
-            <li>Click Start Job Scraping to send scraping tasks.</li>
-            <li>Click Start Auto Apply to apply to discovered jobs.</li>
-            <li>Use Test Webhook to validate connectivity.</li>
+            <li>If you have a provider: paste its webhook URL into Dashboard → Automation Webhook URL.</li>
+            <li>If you don’t: leave it empty to use the built-in runner (no setup).</li>
+            <li>Click Start Job Scraping to import jobs.</li>
+            <li>Click Start Auto Apply to apply to recent jobs.</li>
+            <li>Use Test Webhook to validate external connectivity (optional).</li>
             <li>Monitor Automation Logs and Analytics to verify runs.</li>
           </ol>
         </section>
