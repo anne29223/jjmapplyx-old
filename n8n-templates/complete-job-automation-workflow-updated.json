@@ -4,15 +4,18 @@
   "nodes": [
     {
       "parameters": {
-  "path": "trigger-n8n",
-  "httpMethod": "POST",
-  "authentication": "headerAuth"
+        "path": "job-automation",
+        "httpMethod": "POST",
+        "authentication": "none"
       },
       "id": "webhook-trigger",
       "name": "Webhook Trigger",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 1,
-      "position": [240, 300],
+      "position": [
+        240,
+        300
+      ],
       "webhookId": "job-automation-webhook"
     },
     {
@@ -42,7 +45,10 @@
       "name": "Extract Parameters",
       "type": "n8n-nodes-base.set",
       "typeVersion": 1,
-      "position": [460, 300]
+      "position": [
+        460,
+        300
+      ]
     },
     {
       "parameters": {
@@ -65,7 +71,10 @@
       "name": "Scrape Indeed Jobs",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 3,
-      "position": [680, 180]
+      "position": [
+        680,
+        180
+      ]
     },
     {
       "parameters": {
@@ -87,7 +96,10 @@
       "name": "Scrape LinkedIn Jobs",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 3,
-      "position": [680, 300]
+      "position": [
+        680,
+        300
+      ]
     },
     {
       "parameters": {
@@ -108,7 +120,10 @@
       "name": "Scrape Jobs2Careers",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 3,
-      "position": [680, 420]
+      "position": [
+        680,
+        420
+      ]
     },
     {
       "parameters": {
@@ -118,7 +133,10 @@
       "name": "Parse & Validate Jobs",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [900, 300]
+      "position": [
+        900,
+        300
+      ]
     },
     {
       "parameters": {
@@ -144,16 +162,19 @@
       "name": "Validate Job Data",
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
-      "position": [1120, 300]
+      "position": [
+        1120,
+        300
+      ]
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "https://tzvzranspvtifnlgrkwi.functions.supabase.co/n8n-webhook",
+        "url": "https://tzvzranspvtifnlgrkwi.supabase.co/functions/v1/n8n-webhook",
         "authentication": "headerAuth",
         "headers": {
           "Content-Type": "application/json",
-          "x-n8n-secret": "<YOUR_SHARED_SECRET>"
+          "Authorization": "Bearer {{$credentials.supabaseApiKey}}"
         },
         "body": {
           "action": "job-found",
@@ -168,7 +189,10 @@
       "name": "Send to JJMApplyX",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 3,
-      "position": [1340, 300]
+      "position": [
+        1340,
+        300
+      ]
     },
     {
       "parameters": {
@@ -185,7 +209,10 @@
       "name": "Check Auto Apply Eligible",
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
-      "position": [1560, 300]
+      "position": [
+        1560,
+        300
+      ]
     },
     {
       "parameters": {
@@ -201,7 +228,10 @@
       "name": "Load Job Page",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 3,
-      "position": [1780, 200]
+      "position": [
+        1780,
+        200
+      ]
     },
     {
       "parameters": {
@@ -211,7 +241,10 @@
       "name": "Analyze Application Possibility",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2000, 200]
+      "position": [
+        2000,
+        200
+      ]
     },
     {
       "parameters": {
@@ -233,16 +266,19 @@
       "name": "Can Auto Apply?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
-      "position": [2220, 200]
+      "position": [
+        2220,
+        200
+      ]
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "https://tzvzranspvtifnlgrkwi.functions.supabase.co/n8n-webhook",
+        "url": "https://tzvzranspvtifnlgrkwi.supabase.co/functions/v1/n8n-webhook",
         "authentication": "headerAuth",
         "headers": {
           "Content-Type": "application/json",
-          "x-n8n-secret": "<YOUR_SHARED_SECRET>"
+          "Authorization": "Bearer {{$credentials.supabaseApiKey}}"
         },
         "body": {
           "action": "application-submitted",
@@ -257,16 +293,19 @@
       "name": "Report Application Success",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 3,
-      "position": [2440, 100]
+      "position": [
+        2440,
+        100
+      ]
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "https://tzvzranspvtifnlgrkwi.functions.supabase.co/n8n-webhook",
+        "url": "https://tzvzranspvtifnlgrkwi.supabase.co/functions/v1/n8n-webhook",
         "authentication": "headerAuth",
         "headers": {
           "Content-Type": "application/json",
-          "x-n8n-secret": "<YOUR_SHARED_SECRET>"
+          "Authorization": "Bearer {{$credentials.supabaseApiKey}}"
         },
         "body": {
           "action": "application-failed",
@@ -281,7 +320,10 @@
       "name": "Report Application Failure",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 3,
-      "position": [2440, 300]
+      "position": [
+        2440,
+        300
+      ]
     }
   ],
   "connections": {
@@ -305,7 +347,7 @@
             "index": 0
           },
           {
-            "node": "Scrape LinkedIn Jobs", 
+            "node": "Scrape LinkedIn Jobs",
             "type": "main",
             "index": 0
           },
