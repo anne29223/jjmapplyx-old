@@ -344,4 +344,3 @@ verify_jwt = true
 
 [functions.run-automation]
 verify_jwt = true
->>>>>>> 2712dc380e1351f8aed7c2b91ab504be87f07fe9
