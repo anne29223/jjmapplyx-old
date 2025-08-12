@@ -38,14 +38,24 @@ const Docs = () => {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-xl font-semibold">n8n integration</h2>
+          <h2 className="text-xl font-semibold">Automation integration (free)</h2>
           <p className="text-muted-foreground mt-2">
-            Use the provided templates to set up Job Scraping, Auto Apply, and Email Monitoring workflows in your n8n instance.
+            Works with Pipedream (free), n8n, or Make.com. Or use the built-in runner with no external tools.
           </p>
           <ul className="list-disc pl-6 text-sm text-muted-foreground mt-2">
-            <li>Webhook receive: <code>/functions/v1/n8n-webhook</code></li>
-            <li>Trigger n8n: <code>/functions/v1/trigger-n8n</code></li>
+            <li>Receive results: <code>https://tzvzranspvtifnlgrkwi.supabase.co/functions/v1/n8n-webhook</code> (send header <code>x-n8n-secret</code>)</li>
+            <li>Trigger provider: via Dashboard buttons → calls <code>/functions/v1/trigger-n8n</code></li>
+            <li>No external tool? Leave the webhook field empty and click the Start buttons — the built-in automation will run.</li>
           </ul>
+          <div className="mt-4 space-y-2 text-sm text-muted-foreground">
+            <p className="font-medium">Pipedream quick start</p>
+            <ol className="list-decimal pl-6 space-y-1">
+              <li>Create an HTTP/Webhook source in Pipedream and copy its URL.</li>
+              <li>Paste it into Dashboard → Automation Webhook URL and click away to save.</li>
+              <li>Click “Start Job Scraping” or “Start Auto Apply” in the Control Panel.</li>
+              <li>Add an HTTP step that POSTs results to the receive URL above with header <code>x-n8n-secret</code> and a JSON body like <code>{'{"action":"job-found","data":{...}}'}</code>.</li>
+            </ol>
+          </div>
         </section>
 
         <section className="mb-8">
@@ -56,6 +66,18 @@ const Docs = () => {
             <li>Toggle boards on/off. Enabled boards are iterated when you trigger automations.</li>
             <li>Use “Add Hourly/Gig Presets” to quickly add Snagajob, Instawork, Wonolo, Shiftsmart, TaskRabbit, SimplyHired, Jobcase, PeopleReady.</li>
             <li>In Settings, set your n8n webhook URL. The trigger will loop across all enabled boards automatically.</li>
+          </ol>
+        </section>
+
+        <section className="mb-8">
+          <h2 className="text-xl font-semibold">Run automations</h2>
+          <ol className="list-decimal pl-6 text-sm text-muted-foreground mt-2 space-y-1">
+            <li>If you have a provider: paste its webhook URL into Dashboard → Automation Webhook URL.</li>
+            <li>If you don’t: leave it empty to use the built-in runner (no setup).</li>
+            <li>Click Start Job Scraping to import jobs.</li>
+            <li>Click Start Auto Apply to apply to recent jobs.</li>
+            <li>Use Test Webhook to validate external connectivity (optional).</li>
+            <li>Monitor Automation Logs and Analytics to verify runs.</li>
           </ol>
         </section>
 

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # For detailed configuration reference documentation, visit:
 # https://supabase.com/docs/guides/local-development/cli/config
 # A string used to distinguish different Supabase projects on the same host. Defaults to the
@@ -332,3 +333,15 @@ s3_region = "env(S3_REGION)"
 s3_access_key = "env(S3_ACCESS_KEY)"
 # Configures AWS_SECRET_ACCESS_KEY for S3 bucket
 s3_secret_key = "env(S3_SECRET_KEY)"
+=======
+project_id = "tzvzranspvtifnlgrkwi"
+
+[functions.n8n-webhook]
+verify_jwt = false
+
+[functions.trigger-n8n]
+verify_jwt = true
+
+[functions.run-automation]
+verify_jwt = true
+>>>>>>> 2712dc380e1351f8aed7c2b91ab504be87f07fe9

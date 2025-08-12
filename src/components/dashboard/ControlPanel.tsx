@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { ResumeManager } from "./ResumeManager";
 import { Bot, Settings, Play, Pause, Webhook, Zap, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useUpdateSettings, useTriggerN8N } from "@/hooks/useSupabase";
+import { useUpdateSettings, useTriggerN8N, supabase } from "@/hooks/useSupabase";
 import { useState } from "react";
 
 interface ControlPanelProps {
@@ -77,17 +77,26 @@ export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSetting
 
   const handleStartN8NWorkflow = async (workflow: string) => {
     try {
-      await triggerN8N({ workflow });
-      toast({
-        title: "n8n Workflow Started",
-        description: `${workflow} automation is now running.`,
-      });
+      if (localN8nUrl && localN8nUrl.trim().length > 0) {
+        await triggerN8N({ workflow })
+        toast({
+          title: "Automation Triggered",
+          description: `${workflow} workflow started via your webhook provider.`,
+        })
+      } else {
+        const { data, error } = await supabase.functions.invoke('run-automation', { body: { workflow } })
+        if (error) throw error
+        toast({
+          title: "Built-in Automation Running",
+          description: `${workflow} started with the built-in runner (no external tool needed).`,
+        })
+      }
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to start n8n workflow. Check your webhook URL.",
+        description: "Failed to start automation. Check settings and try again.",
         variant: "destructive"
-      });
+      })
     }
   };
 
@@ -172,15 +181,15 @@ export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSetting
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Webhook className="h-5 w-5" />
-              n8n Automation Integration
+              Automation Webhook Integration
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
              <div className="space-y-2">
-               <Label htmlFor="n8n-webhook">n8n Webhook URL</Label>
+               <Label htmlFor="n8n-webhook">Automation Webhook URL (Pipedream / n8n / Make)</Label>
                 <Input
                  id="n8n-webhook"
-                 placeholder="https://your-n8n-instance.com/webhook/..."
+                 placeholder="https://eox.pipedream.net/..."
                  value={localN8nUrl}
                  onChange={(e) => setLocalN8nUrl(e.target.value)}
                  onBlur={(e) => {
@@ -189,58 +198,65 @@ export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSetting
                  }}
                />
                <p className="text-xs text-muted-foreground">
-                 This webhook will receive job application triggers from the dashboard
+                 Paste any provider's inbound webhook URL. We'll POST your payload to it securely.
                </p>
              </div>
-            <div className="flex gap-2">
-              <Button 
-                size="sm" 
-                variant="outline"
-                onClick={() => handleStartN8NWorkflow('job-scraping')}
-              >
-                <Zap className="h-4 w-4 mr-2" />
-                Start Job Scraping
-              </Button>
-              <Button 
-                size="sm" 
-                variant="outline"
-                onClick={() => handleStartN8NWorkflow('email-monitoring')}
-              >
-                <Mail className="h-4 w-4 mr-2" />
-                Start Email Monitor
-              </Button>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="make-webhook">Make.com Webhook URL (Legacy)</Label>
-              <Input
-                id="make-webhook"
-                type="url"
-                value={safeSettings.makeWebhook || safeSettings.webhook_make || ""}
-                onChange={(e) => 
-                  handleSettingsUpdate({...safeSettings, webhook_make: e.target.value, makeWebhook: e.target.value})
-                }
-                placeholder="https://hook.make.com/..."
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="power-automate">Power Automate Flow URL (Legacy)</Label>
-              <Input
-                id="power-automate"
-                type="url"
-                value={safeSettings.powerAutomateFlow || safeSettings.webhook_power_automate || ""}
-                onChange={(e) => 
-                  handleSettingsUpdate({...safeSettings, webhook_power_automate: e.target.value, powerAutomateFlow: e.target.value})
-                }
-                placeholder="https://prod-XX.westus.logic.azure.com..."
-              />
-            </div>
-            
-            <div className="text-xs text-muted-foreground space-y-1">
-              <p>• n8n provides complete automation workflow management</p>
-              <p>• Make.com & Power Automate available for legacy support</p>
-              <p>• Configure n8n webhook for advanced job automation</p>
-            </div>
+             <div className="flex gap-2">
+               <Button 
+                 size="sm" 
+                 variant="outline"
+                 onClick={() => handleStartN8NWorkflow('job-scraping')}
+               >
+                 <Zap className="h-4 w-4 mr-2" />
+                 Start Job Scraping
+               </Button>
+               <Button 
+                 size="sm" 
+                 variant="outline"
+                 onClick={() => handleStartN8NWorkflow('auto-apply')}
+               >
+                 <Play className="h-4 w-4 mr-2" />
+                 Start Auto Apply
+               </Button>
+               <Button 
+                 size="sm" 
+                 variant="outline"
+                 onClick={() => handleStartN8NWorkflow('email-monitoring')}
+               >
+                 <Mail className="h-4 w-4 mr-2" />
+                 Start Email Monitor
+               </Button>
+             </div>
+             <div className="space-y-2">
+               <Label htmlFor="make-webhook">Make.com Webhook URL (Legacy)</Label>
+               <Input
+                 id="make-webhook"
+                 type="url"
+                 value={safeSettings.makeWebhook || safeSettings.webhook_make || ""}
+                 onChange={(e) => 
+                   handleSettingsUpdate({...safeSettings, webhook_make: e.target.value, makeWebhook: e.target.value})
+                 }
+                 placeholder="https://hook.make.com/..."
+               />
+             </div>
+             
+             <div className="space-y-2">
+               <Label htmlFor="power-automate">Power Automate Flow URL (Legacy)</Label>
+               <Input
+                 id="power-automate"
+                 type="url"
+                 value={safeSettings.powerAutomateFlow || safeSettings.webhook_power_automate || ""}
+                 onChange={(e) => 
+                   handleSettingsUpdate({...safeSettings, webhook_power_automate: e.target.value, powerAutomateFlow: e.target.value})
+                 }
+                 placeholder="https://prod-XX.westus.logic.azure.com..."
+               />
+             </div>
+             
+             <div className="text-xs text-muted-foreground space-y-1">
+               <p>• Works with Pipedream (free), n8n, Make.com, Power Automate</p>
+               <p>• Configure your webhook to enable one-click automation</p>
+             </div>
           </CardContent>
         </Card>
 
