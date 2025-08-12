@@ -204,6 +204,14 @@ export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSetting
                <Button 
                  size="sm" 
                  variant="outline"
+                 onClick={() => handleStartN8NWorkflow('auto-apply')}
+               >
+                 <Play className="h-4 w-4 mr-2" />
+                 Start Auto Apply
+               </Button>
+               <Button 
+                 size="sm" 
+                 variant="outline"
                  onClick={() => handleStartN8NWorkflow('email-monitoring')}
                >
                  <Mail className="h-4 w-4 mr-2" />
