@@ -117,27 +117,7 @@ export const useUpdateSettings = () => {
   })
 }
 
-export const useTriggerN8N = () => {
-  const queryClient = useQueryClient()
-  
-  return useMutation({
-    mutationFn: async ({ workflow, jobData }: { workflow: string, jobData?: any }) => {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) throw new Error('Not authenticated')
 
-      const response = await supabase.functions.invoke('trigger-n8n', {
-        body: { workflow, jobData }
-      })
-
-      if (response.error) throw response.error
-      return response.data
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['automation_logs'] })
-      queryClient.invalidateQueries({ queryKey: ['automation_stats'] })
-    }
-  })
-}
 
 // Job Sites hooks
 export const useJobSites = () => {

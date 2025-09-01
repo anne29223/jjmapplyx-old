@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Filter } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useJobs, useAutomationStats, useUserSettings, useTriggerN8N } from "@/hooks/useSupabase";
+import { useJobs, useAutomationStats, useUserSettings } from "@/hooks/useSupabase";
 
 const mockJobs = [
   {
@@ -180,7 +180,7 @@ export const Dashboard = () => {
   const { data: jobs = [], isLoading: jobsLoading } = useJobs();
   const { data: stats = mockStats } = useAutomationStats();
   const { data: settings = mockSettings } = useUserSettings();
-  const { mutate: triggerN8N } = useTriggerN8N();
+
 
   const filteredJobs = (jobs.length > 0 ? jobs : mockJobs).filter((job: any) => {
     const matchesSearch = job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -190,20 +190,21 @@ export const Dashboard = () => {
   });
 
   const handleJobApply = async (jobId: string) => {
-    console.log("Triggering n8n auto-apply for job:", jobId);
-    
+    console.log("Triggering direct auto-apply for job:", jobId);
     const job = (jobs.length > 0 ? jobs : mockJobs).find((j: any) => j.id === jobId);
     if (!job) return;
-
     try {
-      await triggerN8N({
-        workflow: 'job-application',
-        jobData: job
+      // Call your new automation endpoint or function here
+      const response = await fetch("/api/auto-apply", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ jobId: job.id, jobData: job })
       });
-
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Failed to trigger automation");
       toast({
-        title: "n8n Workflow Triggered",
-        description: `Auto-apply workflow started for ${job.title} at ${job.company}`,
+        title: "Auto Apply Triggered",
+        description: `Automation started for ${job.title} at ${job.company}`,
       });
     } catch (error) {
       toast({
