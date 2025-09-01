@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { supabase } from '../db/supabaseClient.js';
 import { fetchJobs, applyToJob } from './jobBoards.js';
 
@@ -41,7 +40,6 @@ async function run() {
 }
 
 run();
-=======
 import { supabase } from '../db/supabaseClient.js';
 import { fetchJobs, applyToJob } from './jobBoards.js';
 
@@ -84,4 +82,3 @@ async function run() {
 }
 
 run();
->>>>>>> a3da74fae7409c8d8fde2aa7e554425e164551cf
