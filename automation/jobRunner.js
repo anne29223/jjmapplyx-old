@@ -1,9 +1,19 @@
 import { supabase } from '../db/supabaseClient.js';
 import { fetchJobs, applyToJob } from './jobBoards.js';
 
+
 async function run() {
   // 1. Load users + preferences
-  const { data: users } = await supabase.from('users').select('*');
+  const { data: users, error } = await supabase.from('users').select('*');
+
+  if (error) {
+    console.error('Error fetching users:', error);
+    return;
+  }
+  if (!users || users.length === 0) {
+    console.log('No users found.');
+    return;
+  }
 
   for (const user of users) {
     const { site, filter, profile } = user;
