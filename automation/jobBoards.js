@@ -1,6 +1,4 @@
-
 import fetch from 'node-fetch';
-
 
 // Fetch jobs from various gig/shift job boards
 export async function fetchJobs(site, filter) {
