@@ -1,3 +1,29 @@
+// Applications hook: fetch all applications with job, status, interview, shift, and contact info
+export const useApplications = () => {
+  return useQuery({
+    queryKey: ['applications'],
+    queryFn: async () => {
+      // Join jobs and applications tables for richer info
+      const { data, error } = await supabase
+        .from('applications')
+        .select(`
+          id,
+          job_id,
+          status,
+          interview_date,
+          shift_info,
+          applied_at,
+          name,
+          contact,
+          job_title,
+          company
+        `)
+        .order('applied_at', { ascending: false });
+      if (error) throw error;
+      return data || [];
+    }
+  });
+}
 import { createClient } from '@supabase/supabase-js'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 

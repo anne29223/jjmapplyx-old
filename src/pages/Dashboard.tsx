@@ -142,133 +142,134 @@ const mockJobs = [
     id: "12",
     title: "Work From Home Jobs",
     company: "The Work at Home Woman",
-    url: "https://theworkathomewoman.com",
-    status: "pending" as const,
-    payRange: "Varies",
-    type: "Remote",
-    resumeRequired: false,
-    notes: "Curated remote job listings"
-  }
-];
-
-const mockStats = {
-  totalJobs: 12,
-  applied: 0,
-  pending: 12,
-  successRate: 0,
-  automationRuns: 0,
-  webhooksTriggered: 0
-};
-
-const mockSettings = {
-  email: "user@example.com",
-  phone: "+1 (555) 987-6543",
-  runsPerDay: 2,
-  autoApply: true,
-  makeWebhook: "",
-  powerAutomateFlow: ""
-};
-
-export const Dashboard = () => {
-  const [viewingUrl, setViewingUrl] = useState<string | null>(null);
-  const [isAgentRunning, setIsAgentRunning] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const { toast } = useToast();
-
-  // Use real Supabase data
-  const { data: jobs = [], isLoading: jobsLoading } = useJobs();
-  const { data: stats = mockStats } = useAutomationStats();
-  const { data: settings = mockSettings } = useUserSettings();
-
-
-  const filteredJobs = (jobs.length > 0 ? jobs : mockJobs).filter((job: any) => {
-    const matchesSearch = job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         job.company.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || job.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
-
-  const handleJobApply = async (jobId: string) => {
-    console.log("Triggering direct auto-apply for job:", jobId);
-    const job = (jobs.length > 0 ? jobs : mockJobs).find((j: any) => j.id === jobId);
-    if (!job) return;
-    try {
-      // Call your new automation endpoint or function here
-      const response = await fetch("/api/auto-apply", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ jobId: job.id, jobData: job })
-      });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Failed to trigger automation");
-      toast({
-        title: "Auto Apply Triggered",
-        description: `Automation started for ${job.title} at ${job.company}`,
-      });
-    } catch (error) {
-      toast({
-  title: "Error",
-  description: "Failed to trigger automation. Check your settings.",
-  variant: "destructive"
-      });
-    }
-  };
-
-  return (
-    <div className="min-h-screen bg-background">
-      <SiteViewer url={viewingUrl} onClose={() => setViewingUrl(null)} />
-      
-      <div className="container mx-auto p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              JJMapplyx Dashboard
-            </h1>
-            <p className="text-muted-foreground">
-              AI-powered job application automation
-            </p>
+    // ...other fields...
+  },
+// ...existing code...
+              </TabsList>
+              <TabsContent value="jobs" className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-2xl font-semibold">Job Applications</h2>
+                  <div className="flex gap-3">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                      <Input
+                        placeholder="Search jobs..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10 w-64"
+                      />
+                    </div>
+                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                      <SelectTrigger className="w-40">
+                        <Filter className="h-4 w-4 mr-2" />
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-popover border-border">
+                        <SelectItem value="all">All Status</SelectItem>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="applied">Applied</SelectItem>
+                        <SelectItem value="no-response">No Response</SelectItem>
+                        <SelectItem value="rejected">Rejected</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+                  {filteredJobs.map((job) => (
+                    <JobCard
+                      key={job.id}
+                      job={job}
+                      onViewSite={(url) => setViewingUrl(url)}
+                      onApply={() => handleJobApply(job.id)}
+                    />
+                  ))}
+                </div>
+                {filteredJobs.length === 0 && (
+                  <div className="text-center py-12">
+                    <p className="text-muted-foreground">No jobs found matching your criteria.</p>
+                  </div>
+                )}
+              </TabsContent>
+              <TabsContent value="applications" className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-2xl font-semibold">Applications</h2>
+                </div>
+                <ApplicationsTable />
+              </TabsContent>
+              <TabsContent value="analytics">
+                <Analytics />
+              </TabsContent>
+              <TabsContent value="settings">
+                <JobSiteConfig />
+              </TabsContent>
+              <TabsContent value="data">
+                <ExportImport />
+              </TabsContent>
+            </Tabs>
           </div>
-        </div>
-
-        <StatsCards stats={stats} />
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
-            <ControlPanel
-              isRunning={isAgentRunning}
-              onToggleBot={() => setIsAgentRunning(!isAgentRunning)}
-              settings={settings}
-              onUpdateSettings={() => {}} // Handled in ControlPanel via useUpdateSettings
-            />
-          </div>
-          <div className="space-y-6">
-            <AutomationLogs />
-            <TestWebhook />
-          </div>
+      </div>
+    );
         </div>
 
         <Tabs defaultValue="jobs" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="jobs">Job Applications</TabsTrigger>
+            <TabsTrigger value="applications">Applications</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="settings">Site Config</TabsTrigger>
             <TabsTrigger value="data">Export/Import</TabsTrigger>
           </TabsList>
 
           <TabsContent value="jobs" className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-semibold">Job Applications</h2>
-            <div className="flex gap-3">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input
-                  placeholder="Search jobs..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 w-64"
-                />
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-semibold">Job Applications</h2>
+              <div className="flex gap-3">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                  <Input
+                    placeholder="Search jobs..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 w-64"
+                  />
+                </div>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-40">
+                    <Filter className="h-4 w-4 mr-2" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover border-border">
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="applied">Applied</SelectItem>
+                    <SelectItem value="no-response">No Response</SelectItem>
+                    <SelectItem value="rejected">Rejected</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+              {filteredJobs.map((job) => (
+                <JobCard
+                  key={job.id}
+                  job={job}
+                  onViewSite={(url) => setViewingUrl(url)}
+                  onApply={() => handleJobApply(job.id)}
+                />
+              ))}
+            </div>
+            {filteredJobs.length === 0 && (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">No jobs found matching your criteria.</p>
+              </div>
+            )}
+          </TabsContent>
+          <TabsContent value="applications" className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-semibold">Applications</h2>
+            </div>
+            <ApplicationsTable />
+          </TabsContent>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-40">
                   <Filter className="h-4 w-4 mr-2" />
