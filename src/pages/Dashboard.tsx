@@ -208,9 +208,9 @@ export const Dashboard = () => {
       });
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to trigger n8n workflow. Check your settings.",
-        variant: "destructive"
+  title: "Error",
+  description: "Failed to trigger automation. Check your settings.",
+  variant: "destructive"
       });
     }
   };
