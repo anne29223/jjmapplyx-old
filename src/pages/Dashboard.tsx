@@ -142,7 +142,13 @@ const mockJobs = [
   {
     id: "12",
     title: "Work From Home Jobs",
-    company: "The Work at Home Woman"
+    company: "The Work at Home Woman",
+    url: "https://theworkathomewoman.com",
+    status: "pending" as const,
+    payRange: "Varies",
+    type: "Remote",
+    resumeRequired: false,
+    notes: "Curated work-from-home job listings"
   }
 ];
 
