@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Search, Filter } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useJobs, useAutomationStats, useUserSettings } from "@/hooks/useSupabase";
+import { ApplicationsTable } from "@/components/dashboard/ApplicationsTable";
 
 const mockJobs = [
   {
@@ -141,76 +142,58 @@ const mockJobs = [
   {
     id: "12",
     title: "Work From Home Jobs",
-    company: "The Work at Home Woman",
-    // ...other fields...
-  },
-// ...existing code...
-              </TabsList>
-              <TabsContent value="jobs" className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-semibold">Job Applications</h2>
-                  <div className="flex gap-3">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                      <Input
-                        placeholder="Search jobs..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10 w-64"
-                      />
-                    </div>
-                    <Select value={statusFilter} onValueChange={setStatusFilter}>
-                      <SelectTrigger className="w-40">
-                        <Filter className="h-4 w-4 mr-2" />
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-popover border-border">
-                        <SelectItem value="all">All Status</SelectItem>
-                        <SelectItem value="pending">Pending</SelectItem>
-                        <SelectItem value="applied">Applied</SelectItem>
-                        <SelectItem value="no-response">No Response</SelectItem>
-                        <SelectItem value="rejected">Rejected</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-                  {filteredJobs.map((job) => (
-                    <JobCard
-                      key={job.id}
-                      job={job}
-                      onViewSite={(url) => setViewingUrl(url)}
-                      onApply={() => handleJobApply(job.id)}
-                    />
-                  ))}
-                </div>
-                {filteredJobs.length === 0 && (
-                  <div className="text-center py-12">
-                    <p className="text-muted-foreground">No jobs found matching your criteria.</p>
-                  </div>
-                )}
-              </TabsContent>
-              <TabsContent value="applications" className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-semibold">Applications</h2>
-                </div>
-                <ApplicationsTable />
-              </TabsContent>
-              <TabsContent value="analytics">
-                <Analytics />
-              </TabsContent>
-              <TabsContent value="settings">
-                <JobSiteConfig />
-              </TabsContent>
-              <TabsContent value="data">
-                <ExportImport />
-              </TabsContent>
-            </Tabs>
-          </div>
-      </div>
-    );
-        </div>
+    company: "The Work at Home Woman"
+  }
+];
 
+export default function Dashboard() {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [viewingUrl, setViewingUrl] = useState<string | null>(null);
+  const { toast } = useToast();
+  const { data: jobs = [], isLoading: jobsLoading } = useJobs();
+  const { data: stats = {} } = useAutomationStats();
+  const { data: settings = {} } = useUserSettings();
+  const filteredJobs = (jobs.length > 0 ? jobs : mockJobs).filter((job: any) => {
+    const matchesSearch = job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      job.company.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === "all" || job.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
+  const handleJobApply = async (jobId: string) => {
+    // ...existing code for handleJobApply...
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+      <SiteViewer url={viewingUrl} onClose={() => setViewingUrl(null)} />
+      <div className="container mx-auto p-6 space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              JJMapplyx Dashboard
+            </h1>
+            <p className="text-muted-foreground">
+              AI-powered job application automation
+            </p>
+          </div>
+        </div>
+        <StatsCards stats={stats} />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <ControlPanel
+              isRunning={false}
+              onToggleBot={() => {}}
+              settings={settings}
+              onUpdateSettings={() => {}}
+            />
+          </div>
+          <div className="space-y-6">
+            <AutomationLogs />
+            <TestWebhook />
+          </div>
+        </div>
         <Tabs defaultValue="jobs" className="space-y-6">
           <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="jobs">Job Applications</TabsTrigger>
@@ -219,7 +202,6 @@ const mockJobs = [
             <TabsTrigger value="settings">Site Config</TabsTrigger>
             <TabsTrigger value="data">Export/Import</TabsTrigger>
           </TabsList>
-
           <TabsContent value="jobs" className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-semibold">Job Applications</h2>
@@ -270,48 +252,12 @@ const mockJobs = [
             </div>
             <ApplicationsTable />
           </TabsContent>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-40">
-                  <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-popover border-border">
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="applied">Applied</SelectItem>
-                  <SelectItem value="no-response">No Response</SelectItem>
-                  <SelectItem value="rejected">Rejected</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-            {filteredJobs.map((job) => (
-              <JobCard
-                key={job.id}
-                job={job}
-                onViewSite={(url) => setViewingUrl(url)}
-                onApply={() => handleJobApply(job.id)}
-              />
-            ))}
-          </div>
-
-          {filteredJobs.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">No jobs found matching your criteria.</p>
-            </div>
-          )}
-          </TabsContent>
-
           <TabsContent value="analytics">
             <Analytics />
           </TabsContent>
-
           <TabsContent value="settings">
             <JobSiteConfig />
           </TabsContent>
-
           <TabsContent value="data">
             <ExportImport />
           </TabsContent>
@@ -319,4 +265,4 @@ const mockJobs = [
       </div>
     </div>
   );
-};
+}
