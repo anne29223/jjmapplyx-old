@@ -3,12 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TestTube, CheckCircle, XCircle, Loader2 } from "lucide-react";
-// useTriggerN8N is not exported from useSupabase
+// ...existing code...
 import { useToast } from "@/hooks/use-toast";
 
 export const TestWebhook = () => {
   const [testResults, setTestResults] = useState<Record<string, 'success' | 'error' | 'testing'>>({});
-  // useTriggerN8N is not available; replace with actual trigger logic or remove
+  // ...existing code...
   const { toast } = useToast();
 
   const testWorkflow = async (workflow: string) => {
