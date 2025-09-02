@@ -63,6 +63,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background p-6">
+      <div className="bg-red-500 text-white p-4 mb-4">Test Render: If you see this, the dashboard is rendering!</div>
       <h1 className="text-3xl font-bold mb-4">Dashboard</h1>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <Card>
