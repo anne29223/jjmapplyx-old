@@ -33,7 +33,6 @@ interface ControlPanelProps {
 export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSettings }: ControlPanelProps) => {
   const { toast } = useToast();
   const { mutate: updateSettings } = useUpdateSettings();
-  // useTriggerN8N is not available; remove or replace with appropriate logic if needed
 
   // Provide default values if settings is null
   const safeSettings = settings || {
@@ -78,7 +77,7 @@ export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSetting
   const handleStartN8NWorkflow = async (workflow: string) => {
     try {
       if (localN8nUrl && localN8nUrl.trim().length > 0) {
-        // triggerN8N is not defined; replace with actual trigger logic or remove
+  // Trigger logic for n8n workflow should be implemented here if needed
         toast({
           title: "Automation Triggered",
           description: `${workflow} workflow started via your webhook provider.`,
