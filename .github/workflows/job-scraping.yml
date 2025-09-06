@@ -1,0 +1,63 @@
+name: Job Scraping Workflow
+
+on:
+  workflow_dispatch:
+    inputs:
+      user_id:
+        description: 'User ID for the automation'
+        required: true
+        type: string
+      search_query:
+        description: 'Job search query'
+        required: false
+        type: string
+        default: 'hourly work'
+      location:
+        description: 'Job location'
+        required: false
+        type: string
+        default: 'remote'
+      job_boards:
+        description: 'Comma-separated list of job boards to scrape'
+        required: false
+        type: string
+        default: 'snagajob,indeedflex,ziprecruiter,instawork,veryable,bluecrew'
+  schedule:
+    # Run every 6 hours
+    - cron: '0 */6 * * *'
+
+jobs:
+  scrape-jobs:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm install
+      
+    - name: Scrape Job Boards
+      env:
+        SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        USER_ID: ${{ github.event.inputs.user_id || 'default-user' }}
+        SEARCH_QUERY: ${{ github.event.inputs.search_query || 'hourly work' }}
+        LOCATION: ${{ github.event.inputs.location || 'remote' }}
+        JOB_BOARDS: ${{ github.event.inputs.job_boards || 'snagajob,indeedflex,ziprecruiter,instawork,veryable,bluecrew' }}
+      run: |
+        node scripts/github-actions/scrape-jobs.js
+        
+    - name: Update Job Statistics
+      env:
+        SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        USER_ID: ${{ github.event.inputs.user_id || 'default-user' }}
+      run: |
+        node scripts/github-actions/update-stats.js

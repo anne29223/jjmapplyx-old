@@ -1,0 +1,32 @@
+{
+  "name": "jjmapplyx-github-actions",
+  "version": "1.0.0",
+  "description": "GitHub Actions automation scripts for JJMapplyx",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "scrape-jobs": "node scrape-jobs.js",
+    "auto-apply": "node auto-apply.js",
+    "monitor-emails": "node monitor-emails.js",
+    "process-emails": "node process-email-responses.js",
+    "update-stats": "node update-stats.js",
+    "update-app-stats": "node update-application-stats.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.52.1",
+    "node-fetch": "^3.3.2",
+    "playwright": "^1.40.0",
+    "googleapis": "^128.0.0"
+  },
+  "keywords": [
+    "automation",
+    "jobs",
+    "github-actions",
+    "jjmapplyx"
+  ],
+  "author": "JJMapplyx Team",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

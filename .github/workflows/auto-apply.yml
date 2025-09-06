@@ -1,0 +1,59 @@
+name: Auto Apply Workflow
+
+on:
+  workflow_dispatch:
+    inputs:
+      user_id:
+        description: 'User ID for the automation'
+        required: true
+        type: string
+      job_id:
+        description: 'Specific job ID to apply to (optional)'
+        required: false
+        type: string
+      max_applications:
+        description: 'Maximum number of applications to submit'
+        required: false
+        type: string
+        default: '10'
+  schedule:
+    # Run every 4 hours
+    - cron: '0 */4 * * *'
+
+jobs:
+  auto-apply:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm install
+      
+    - name: Setup Playwright
+      run: npx playwright install chromium
+      
+    - name: Auto Apply to Jobs
+      env:
+        SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        USER_ID: ${{ github.event.inputs.user_id || 'default-user' }}
+        JOB_ID: ${{ github.event.inputs.job_id || '' }}
+        MAX_APPLICATIONS: ${{ github.event.inputs.max_applications || '10' }}
+      run: |
+        node scripts/github-actions/auto-apply.js
+        
+    - name: Update Application Statistics
+      env:
+        SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        USER_ID: ${{ github.event.inputs.user_id || 'default-user' }}
+      run: |
+        node scripts/github-actions/update-application-stats.js
