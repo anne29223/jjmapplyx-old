@@ -1,36 +1,87 @@
-
+<<<<<<< HEAD
 import { supabase } from '../db/supabaseClient.js';
 import { fetchJobs, applyToJob } from './jobBoards.js';
 
+async function run() {
+  // 1. Load users + preferences
+  const { data: users } = await supabase.from('users').select('*');
 
+  for (const user of users) {
+    const { site, filter, profile } = user;
 
-// New function: apply to a single job for a user
-export async function runAutomationForJob(jobId, jobData) {
-  // Find the user for this job (assume jobData has user_id or similar)
-  const userId = jobData.user_id;
-  if (!userId) throw new Error('Missing user_id in jobData');
-  const { data: user, error: userError } = await supabase.from('users').select('*').eq('id', userId).single();
-  if (userError || !user) throw new Error('User not found');
+    // 2. Get available jobs
+    const jobs = await fetchJobs(site, filter);
 
-  // Check if already applied
-  const { data: existing } = await supabase
-    .from('applications')
-    .select('*')
-    .eq('user_id', userId)
-    .eq('job_id', jobId)
-    .single();
-  if (existing) return { alreadyApplied: true };
+    for (const job of jobs) {
+      // 3. Check if already applied
+      const { data: existing } = await supabase
+        .from('applications')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('job_id', job.id)
+        .single();
 
-  // Apply
-  const success = await applyToJob(user.site, jobData, user.profile);
-  if (success) {
-    await supabase.from('applications').insert({
-      user_id: userId,
-      job_id: jobId,
-      job_title: jobData.title,
-      applied_at: new Date(),
-    });
-    return { applied: true };
+      if (existing) continue; // skip duplicate
+
+      // 4. Apply
+      const success = await applyToJob(site, job, profile);
+
+      // 5. Save log
+      if (success) {
+        await supabase.from('applications').insert({
+          user_id: user.id,
+          job_id: job.id,
+          job_title: job.title,
+          applied_at: new Date(),
+        });
+        console.log(`✅ Applied to ${job.title} for ${user.name}`);
+      }
+    }
   }
-  return { applied: false };
 }
+
+run();
+=======
+import { supabase } from '../db/supabaseClient.js';
+import { fetchJobs, applyToJob } from './jobBoards.js';
+
+async function run() {
+  // 1. Load users + preferences
+  const { data: users } = await supabase.from('users').select('*');
+
+  for (const user of users) {
+    const { site, filter, profile } = user;
+
+    // 2. Get available jobs
+    const jobs = await fetchJobs(site, filter);
+
+    for (const job of jobs) {
+      // 3. Check if already applied
+      const { data: existing } = await supabase
+        .from('applications')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('job_id', job.id)
+        .single();
+
+      if (existing) continue; // skip duplicate
+
+      // 4. Apply
+      const success = await applyToJob(site, job, profile);
+
+      // 5. Save log
+      if (success) {
+        await supabase.from('applications').insert({
+          user_id: user.id,
+          job_id: job.id,
+          job_title: job.title,
+          applied_at: new Date(),
+        });
+        console.log(`✅ Applied to ${job.title} for ${user.name}`);
+      }
+    }
+  }
+}
+
+run();
+>>>>>>> a3da74fae7409c8d8fde2aa7e554425e164551cf

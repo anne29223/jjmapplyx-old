@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { ResumeManager } from "./ResumeManager";
 import { Bot, Settings, Play, Pause, Webhook, Zap, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useUpdateSettings, supabase } from "@/hooks/useSupabase";
+import { useUpdateSettings, useTriggerN8N, supabase } from "@/hooks/useSupabase";
 import { useState } from "react";
 
 interface ControlPanelProps {
@@ -33,6 +33,7 @@ interface ControlPanelProps {
 export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSettings }: ControlPanelProps) => {
   const { toast } = useToast();
   const { mutate: updateSettings } = useUpdateSettings();
+  const { mutate: triggerN8N } = useTriggerN8N();
 
   // Provide default values if settings is null
   const safeSettings = settings || {
@@ -77,7 +78,7 @@ export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSetting
   const handleStartN8NWorkflow = async (workflow: string) => {
     try {
       if (localN8nUrl && localN8nUrl.trim().length > 0) {
-  // Trigger logic for n8n workflow should be implemented here if needed
+        await triggerN8N({ workflow })
         toast({
           title: "Automation Triggered",
           description: `${workflow} workflow started via your webhook provider.`,
