@@ -6,9 +6,10 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { ResumeManager } from "./ResumeManager";
-import { Bot, Settings, Play, Pause, Webhook, Zap, Mail } from "lucide-react";
+import { AppliedJobsList } from "./AppliedJobsList";
+import { Bot, Settings, Play, Pause, Github, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useUpdateSettings, useTriggerN8N, supabase } from "@/hooks/useSupabase";
+import { useUpdateSettings } from "@/hooks/useSupabase";
 import { useState } from "react";
 
 interface ControlPanelProps {
@@ -33,7 +34,6 @@ interface ControlPanelProps {
 export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSettings }: ControlPanelProps) => {
   const { toast } = useToast();
   const { mutate: updateSettings } = useUpdateSettings();
-  const { mutate: triggerN8N } = useTriggerN8N();
 
   // Provide default values if settings is null
   const safeSettings = settings || {
@@ -43,15 +43,7 @@ export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSetting
     runs_per_day: 5,
     autoApply: false,
     auto_apply: false,
-    makeWebhook: '',
-    webhook_make: '',
-    powerAutomateFlow: '',
-    webhook_power_automate: '',
-    n8n_webhook_url: ''
   };
-
-  // Local state for inputs to prevent focus issues
-  const [localN8nUrl, setLocalN8nUrl] = useState(safeSettings.n8n_webhook_url || '');
 
   const handleSettingsUpdate = (newSettings: any) => {
     console.log('Updating settings:', newSettings);
@@ -75,29 +67,11 @@ export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSetting
     });
   };
 
-  const handleStartN8NWorkflow = async (workflow: string) => {
-    try {
-      if (localN8nUrl && localN8nUrl.trim().length > 0) {
-        await triggerN8N({ workflow })
-        toast({
-          title: "Automation Triggered",
-          description: `${workflow} workflow started via your webhook provider.`,
-        })
-      } else {
-        const { data, error } = await supabase.functions.invoke('run-automation', { body: { workflow } })
-        if (error) throw error
-        toast({
-          title: "Built-in Automation Running",
-          description: `${workflow} started with the built-in runner (no external tool needed).`,
-        })
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to start automation. Check settings and try again.",
-        variant: "destructive"
-      })
-    }
+  const triggerGitHubWorkflow = async () => {
+    toast({
+      title: "GitHub Actions Required",
+      description: "Configure GitHub Actions to run automated job applications. Check the documentation for setup instructions.",
+    });
   };
 
   const handleResumeUpload = (file: File) => {
@@ -180,83 +154,46 @@ export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSetting
         <Card className="border-border">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Webhook className="h-5 w-5" />
-              Automation Webhook Integration
+              <Github className="h-5 w-5" />
+              GitHub Actions Automation
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-             <div className="space-y-2">
-               <Label htmlFor="n8n-webhook">Automation Webhook URL (Pipedream / n8n / Make)</Label>
-                <Input
-                 id="n8n-webhook"
-                 placeholder="https://eox.pipedream.net/..."
-                 value={localN8nUrl}
-                 onChange={(e) => setLocalN8nUrl(e.target.value)}
-                 onBlur={(e) => {
-                   const updatedSettings = { ...safeSettings, n8n_webhook_url: e.target.value };
-                   handleSettingsUpdate(updatedSettings);
-                 }}
-               />
-               <p className="text-xs text-muted-foreground">
-                 Paste any provider's inbound webhook URL. We'll POST your payload to it securely.
-               </p>
-             </div>
-             <div className="flex gap-2">
-               <Button 
-                 size="sm" 
-                 variant="outline"
-                 onClick={() => handleStartN8NWorkflow('job-scraping')}
-               >
-                 <Zap className="h-4 w-4 mr-2" />
-                 Start Job Scraping
-               </Button>
-               <Button 
-                 size="sm" 
-                 variant="outline"
-                 onClick={() => handleStartN8NWorkflow('auto-apply')}
-               >
-                 <Play className="h-4 w-4 mr-2" />
-                 Start Auto Apply
-               </Button>
-               <Button 
-                 size="sm" 
-                 variant="outline"
-                 onClick={() => handleStartN8NWorkflow('email-monitoring')}
-               >
-                 <Mail className="h-4 w-4 mr-2" />
-                 Start Email Monitor
-               </Button>
-             </div>
-             <div className="space-y-2">
-               <Label htmlFor="make-webhook">Make.com Webhook URL (Legacy)</Label>
-               <Input
-                 id="make-webhook"
-                 type="url"
-                 value={safeSettings.makeWebhook || safeSettings.webhook_make || ""}
-                 onChange={(e) => 
-                   handleSettingsUpdate({...safeSettings, webhook_make: e.target.value, makeWebhook: e.target.value})
-                 }
-                 placeholder="https://hook.make.com/..."
-               />
-             </div>
-             
-             <div className="space-y-2">
-               <Label htmlFor="power-automate">Power Automate Flow URL (Legacy)</Label>
-               <Input
-                 id="power-automate"
-                 type="url"
-                 value={safeSettings.powerAutomateFlow || safeSettings.webhook_power_automate || ""}
-                 onChange={(e) => 
-                   handleSettingsUpdate({...safeSettings, webhook_power_automate: e.target.value, powerAutomateFlow: e.target.value})
-                 }
-                 placeholder="https://prod-XX.westus.logic.azure.com..."
-               />
-             </div>
-             
-             <div className="text-xs text-muted-foreground space-y-1">
-               <p>• Works with Pipedream (free), n8n, Make.com, Power Automate</p>
-               <p>• Configure your webhook to enable one-click automation</p>
-             </div>
+            <div className="text-sm text-muted-foreground space-y-2">
+              <p>Automated job applications now run via GitHub Actions on a schedule:</p>
+              <ul className="list-disc list-inside space-y-1 ml-4">
+                <li>9:00 AM UTC - Morning job search</li>
+                <li>12:00 PM UTC - Afternoon job search</li>
+              </ul>
+              <p>Configure your repository secrets to enable automation:</p>
+              <ul className="list-disc list-inside space-y-1 ml-4">
+                <li><code className="bg-muted px-1 rounded">SUPABASE_URL</code></li>
+                <li><code className="bg-muted px-1 rounded">SUPABASE_SERVICE_KEY</code></li>
+              </ul>
+            </div>
+            
+            <div className="flex gap-2">
+              <Button 
+                variant="outline"
+                onClick={triggerGitHubWorkflow}
+                className="flex-1"
+              >
+                <Github className="h-4 w-4 mr-2" />
+                Trigger Manual Run
+              </Button>
+              <Button 
+                variant="outline"
+                size="sm"
+                onClick={() => window.open('https://github.com/settings/personal-access-tokens', '_blank')}
+              >
+                <ExternalLink className="h-4 w-4 mr-2" />
+                Setup Guide
+              </Button>
+            </div>
+            
+            <div className="text-xs text-muted-foreground">
+              GitHub Actions provides reliable, scheduled automation without external dependencies.
+            </div>
           </CardContent>
         </Card>
 
@@ -302,6 +239,10 @@ export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSetting
 
       <div className="lg:col-span-2">
         <ResumeManager onResumeUpload={handleResumeUpload} />
+      </div>
+      
+      <div className="lg:col-span-2">
+        <AppliedJobsList />
       </div>
     </div>
   );
