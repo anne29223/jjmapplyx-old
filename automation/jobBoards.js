@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 // Node.js v18+ has global fetch; no import needed
 
 // Fetch jobs from various gig/shift job boards
