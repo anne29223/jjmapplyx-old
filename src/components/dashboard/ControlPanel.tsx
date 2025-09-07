@@ -6,9 +6,10 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { ResumeManager } from "./ResumeManager";
-import { Bot, Settings, Play, Pause, Webhook, Zap, Mail } from "lucide-react";
+import { AppliedJobsList } from "./AppliedJobsList";
+import { Bot, Settings, Play, Pause, Github, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useUpdateSettings, useTriggerN8N, supabase } from "@/hooks/useSupabase";
+import { useUpdateSettings } from "@/hooks/useSupabase";
 import { useState } from "react";
 
 interface ControlPanelProps {
@@ -38,7 +39,6 @@ interface ControlPanelProps {
 export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSettings }: ControlPanelProps) => {
   const { toast } = useToast();
   const { mutate: updateSettings } = useUpdateSettings();
-  const { mutate: triggerN8N } = useTriggerN8N();
 
   // Provide default values if settings is null
   const safeSettings = settings || {
@@ -48,6 +48,7 @@ export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSetting
     runs_per_day: 5,
     autoApply: false,
     auto_apply: false,
+<<<<<<< HEAD
     makeWebhook: '',
     webhook_make: '',
     powerAutomateFlow: '',
@@ -59,10 +60,9 @@ export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSetting
 =======
     n8n_webhook_url: ''
 >>>>>>> fed2c2426af020fe81aac46e74b03937fb045b5a
+=======
+>>>>>>> 8f07a84086daaf29b201ff33d5dc6d8008191e39
   };
-
-  // Local state for inputs to prevent focus issues
-  const [localN8nUrl, setLocalN8nUrl] = useState(safeSettings.n8n_webhook_url || '');
 
   const handleSettingsUpdate = (newSettings: any) => {
     console.log('Updating settings:', newSettings);
@@ -86,29 +86,11 @@ export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSetting
     });
   };
 
-  const handleStartN8NWorkflow = async (workflow: string) => {
-    try {
-      if (localN8nUrl && localN8nUrl.trim().length > 0) {
-        await triggerN8N({ workflow })
-        toast({
-          title: "Automation Triggered",
-          description: `${workflow} workflow started via your webhook provider.`,
-        })
-      } else {
-        const { data, error } = await supabase.functions.invoke('run-automation', { body: { workflow } })
-        if (error) throw error
-        toast({
-          title: "Built-in Automation Running",
-          description: `${workflow} started with the built-in runner (no external tool needed).`,
-        })
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to start automation. Check settings and try again.",
-        variant: "destructive"
-      })
-    }
+  const triggerGitHubWorkflow = async () => {
+    toast({
+      title: "GitHub Actions Required",
+      description: "Configure GitHub Actions to run automated job applications. Check the documentation for setup instructions.",
+    });
   };
 
 <<<<<<< HEAD
@@ -229,6 +211,7 @@ export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSetting
         <Card className="border-border">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
+<<<<<<< HEAD
               <Webhook className="h-5 w-5" />
 <<<<<<< HEAD
               GitHub Actions Automation
@@ -359,6 +342,48 @@ export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSetting
                <p>• Configure your webhook to enable one-click automation</p>
 >>>>>>> fed2c2426af020fe81aac46e74b03937fb045b5a
              </div>
+=======
+              <Github className="h-5 w-5" />
+              GitHub Actions Automation
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="text-sm text-muted-foreground space-y-2">
+              <p>Automated job applications now run via GitHub Actions on a schedule:</p>
+              <ul className="list-disc list-inside space-y-1 ml-4">
+                <li>9:00 AM UTC - Morning job search</li>
+                <li>12:00 PM UTC - Afternoon job search</li>
+              </ul>
+              <p>Configure your repository secrets to enable automation:</p>
+              <ul className="list-disc list-inside space-y-1 ml-4">
+                <li><code className="bg-muted px-1 rounded">SUPABASE_URL</code></li>
+                <li><code className="bg-muted px-1 rounded">SUPABASE_SERVICE_KEY</code></li>
+              </ul>
+            </div>
+            
+            <div className="flex gap-2">
+              <Button 
+                variant="outline"
+                onClick={triggerGitHubWorkflow}
+                className="flex-1"
+              >
+                <Github className="h-4 w-4 mr-2" />
+                Trigger Manual Run
+              </Button>
+              <Button 
+                variant="outline"
+                size="sm"
+                onClick={() => window.open('https://github.com/settings/personal-access-tokens', '_blank')}
+              >
+                <ExternalLink className="h-4 w-4 mr-2" />
+                Setup Guide
+              </Button>
+            </div>
+            
+            <div className="text-xs text-muted-foreground">
+              GitHub Actions provides reliable, scheduled automation without external dependencies.
+            </div>
+>>>>>>> 8f07a84086daaf29b201ff33d5dc6d8008191e39
           </CardContent>
         </Card>
 
@@ -404,6 +429,10 @@ export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSetting
 
       <div className="lg:col-span-2">
         <ResumeManager onResumeUpload={handleResumeUpload} />
+      </div>
+      
+      <div className="lg:col-span-2">
+        <AppliedJobsList />
       </div>
     </div>
   );
