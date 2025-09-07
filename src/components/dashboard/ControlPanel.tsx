@@ -26,8 +26,11 @@ interface ControlPanelProps {
     powerAutomateFlow?: string;
     webhook_power_automate?: string;
     n8n_webhook_url?: string;
+<<<<<<< HEAD
     github_token?: string;
     github_repo?: string;
+=======
+>>>>>>> fed2c2426af020fe81aac46e74b03937fb045b5a
   };
   onUpdateSettings: (settings: any) => void;
 }
@@ -49,9 +52,13 @@ export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSetting
     webhook_make: '',
     powerAutomateFlow: '',
     webhook_power_automate: '',
+<<<<<<< HEAD
     n8n_webhook_url: '',
     github_token: '',
     github_repo: ''
+=======
+    n8n_webhook_url: ''
+>>>>>>> fed2c2426af020fe81aac46e74b03937fb045b5a
   };
 
   // Local state for inputs to prevent focus issues
@@ -104,6 +111,7 @@ export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSetting
     }
   };
 
+<<<<<<< HEAD
   const handleStartGitHubWorkflow = async (workflow: string) => {
     try {
       if (!safeSettings.github_token || !safeSettings.github_repo) {
@@ -139,6 +147,8 @@ export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSetting
     }
   };
 
+=======
+>>>>>>> fed2c2426af020fe81aac46e74b03937fb045b5a
   const handleResumeUpload = (file: File) => {
     console.log("Resume uploaded:", file.name);
     toast({
@@ -220,11 +230,16 @@ export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSetting
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Webhook className="h-5 w-5" />
+<<<<<<< HEAD
               GitHub Actions Automation
+=======
+              Automation Webhook Integration
+>>>>>>> fed2c2426af020fe81aac46e74b03937fb045b5a
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
              <div className="space-y-2">
+<<<<<<< HEAD
                <Label htmlFor="github-token">GitHub Personal Access Token</Label>
                 <Input
                  id="github-token"
@@ -251,13 +266,32 @@ export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSetting
                />
                <p className="text-xs text-muted-foreground">
                  Repository containing your GitHub Actions workflows
+=======
+               <Label htmlFor="n8n-webhook">Automation Webhook URL (Pipedream / n8n / Make)</Label>
+                <Input
+                 id="n8n-webhook"
+                 placeholder="https://eox.pipedream.net/..."
+                 value={localN8nUrl}
+                 onChange={(e) => setLocalN8nUrl(e.target.value)}
+                 onBlur={(e) => {
+                   const updatedSettings = { ...safeSettings, n8n_webhook_url: e.target.value };
+                   handleSettingsUpdate(updatedSettings);
+                 }}
+               />
+               <p className="text-xs text-muted-foreground">
+                 Paste any provider's inbound webhook URL. We'll POST your payload to it securely.
+>>>>>>> fed2c2426af020fe81aac46e74b03937fb045b5a
                </p>
              </div>
              <div className="flex gap-2">
                <Button 
                  size="sm" 
                  variant="outline"
+<<<<<<< HEAD
                  onClick={() => handleStartGitHubWorkflow('job-scraping')}
+=======
+                 onClick={() => handleStartN8NWorkflow('job-scraping')}
+>>>>>>> fed2c2426af020fe81aac46e74b03937fb045b5a
                >
                  <Zap className="h-4 w-4 mr-2" />
                  Start Job Scraping
@@ -265,7 +299,11 @@ export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSetting
                <Button 
                  size="sm" 
                  variant="outline"
+<<<<<<< HEAD
                  onClick={() => handleStartGitHubWorkflow('auto-apply')}
+=======
+                 onClick={() => handleStartN8NWorkflow('auto-apply')}
+>>>>>>> fed2c2426af020fe81aac46e74b03937fb045b5a
                >
                  <Play className="h-4 w-4 mr-2" />
                  Start Auto Apply
@@ -273,17 +311,53 @@ export const ControlPanel = ({ isRunning, onToggleBot, settings, onUpdateSetting
                <Button 
                  size="sm" 
                  variant="outline"
+<<<<<<< HEAD
                  onClick={() => handleStartGitHubWorkflow('email-monitoring')}
+=======
+                 onClick={() => handleStartN8NWorkflow('email-monitoring')}
+>>>>>>> fed2c2426af020fe81aac46e74b03937fb045b5a
                >
                  <Mail className="h-4 w-4 mr-2" />
                  Start Email Monitor
                </Button>
              </div>
+<<<<<<< HEAD
              
              <div className="text-xs text-muted-foreground space-y-1">
                <p>• Uses GitHub Actions for reliable, scalable automation</p>
                <p>• Workflows run on GitHub's infrastructure</p>
                <p>• No external services required</p>
+=======
+             <div className="space-y-2">
+               <Label htmlFor="make-webhook">Make.com Webhook URL (Legacy)</Label>
+               <Input
+                 id="make-webhook"
+                 type="url"
+                 value={safeSettings.makeWebhook || safeSettings.webhook_make || ""}
+                 onChange={(e) => 
+                   handleSettingsUpdate({...safeSettings, webhook_make: e.target.value, makeWebhook: e.target.value})
+                 }
+                 placeholder="https://hook.make.com/..."
+               />
+             </div>
+             
+             <div className="space-y-2">
+               <Label htmlFor="power-automate">Power Automate Flow URL (Legacy)</Label>
+               <Input
+                 id="power-automate"
+                 type="url"
+                 value={safeSettings.powerAutomateFlow || safeSettings.webhook_power_automate || ""}
+                 onChange={(e) => 
+                   handleSettingsUpdate({...safeSettings, webhook_power_automate: e.target.value, powerAutomateFlow: e.target.value})
+                 }
+                 placeholder="https://prod-XX.westus.logic.azure.com..."
+               />
+             </div>
+             
+             <div className="text-xs text-muted-foreground space-y-1">
+               <p>• Works with Pipedream (free), n8n, Make.com, Power Automate</p>
+               <p>• Configure your webhook to enable one-click automation</p>
+>>>>>>> fed2c2426af020fe81aac46e74b03937fb045b5a
              </div>
           </CardContent>
         </Card>
