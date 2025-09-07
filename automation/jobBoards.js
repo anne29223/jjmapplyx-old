@@ -202,7 +202,7 @@ export async function fetchJobs(site, filter) {
     ].filter(j => j.title.toLowerCase().includes(filter.toLowerCase()));
   }
 
-import fetch from 'node-fetch';
+// Node.js v18+ has global fetch; no import needed
 
 
 // Fetch jobs from various gig/shift job boards
