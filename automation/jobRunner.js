@@ -68,13 +68,9 @@ async function run() {
   }
 }
 
-<<<<<<< HEAD
 // Run if this file is executed directly
 if (import.meta.url === `file://${process.argv[1]}`) {
   run();
 }
 
 export { run };
-=======
-run();
->>>>>>> 8f07a84086daaf29b201ff33d5dc6d8008191e39
