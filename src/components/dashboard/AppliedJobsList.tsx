@@ -51,8 +51,6 @@ export const AppliedJobsList = () => {
     toast.success("Application list downloaded successfully");
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status.toLowerCase()) {
   // User-friendly status text for job applications
   const getStatusText = (status: string) => {
     switch (status.toLowerCase()) {
@@ -73,6 +71,8 @@ export const AppliedJobsList = () => {
         return 'Status unknown';
     }
   };
+
+  const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case 'applied':
         return 'default';
@@ -85,7 +85,6 @@ export const AppliedJobsList = () => {
         return 'secondary';
     }
   };
-
 
   return (
     <Card className="border-border">
@@ -143,7 +142,6 @@ export const AppliedJobsList = () => {
                     variant={getStatusColor(app.status) as any}
                     className="flex items-center gap-1"
                   >
-                    {getStatusIcon(app.status)}
                     {getStatusText(app.status)}
                   </Badge>
                 </div>
