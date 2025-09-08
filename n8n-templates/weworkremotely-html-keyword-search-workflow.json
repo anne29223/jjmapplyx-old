@@ -3,7 +3,9 @@
     {
       "parameters": {
         "url": "https://weworkremotely.com/remote-jobs",
-        "options": {}
+        "options": {
+          "headers": {}
+        }
       },
       "name": "Scrape WeWorkRemotely HTML",
       "type": "n8n-nodes-base.httpRequest",
