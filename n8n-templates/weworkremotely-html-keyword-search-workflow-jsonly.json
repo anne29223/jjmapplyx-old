@@ -1,0 +1,62 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "url": "https://weworkremotely.com/remote-jobs",
+        "options": {
+          "responseFormat": "string",
+          "headers": {}
+        }
+      },
+      "name": "Scrape WeWorkRemotely HTML",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "const html = items[0].json.body || items[0].json;\nconst keywords = ['project manager', 'business analyst', 'developer', 'automation'];\nconst jobRegex = /<li[^>]*>([\s\S]*?<a[^>]*href=\"([^\"]+)\"[^>]*>[\s\S]*?<span class=\"title\">([^<]+)<\/span>[\s\S]*?<span class=\"company\">([^<]+)<\/span>[\s\S]*?)<\/li>/g;\nconst jobs = [];\nlet match;\nwhile ((match = jobRegex.exec(html)) !== null) {\n  const url = 'https://weworkremotely.com' + match[2];\n  const title = match[3].toLowerCase();\n  const company = match[4];\n  if (keywords.some(k => title.includes(k))) {\n    jobs.push({ title, company, url });\n  }\n}\nreturn jobs.map(job => ({ json: job }));"
+      },
+      "name": "Parse and Filter Jobs (JS Only)",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "fromEmail": "noreply@yourdomain.com",
+        "toEmail": "your@email.com",
+        "subject": "Filtered WeWorkRemotely Jobs (HTML)",
+        "text": "={{ $json.title }} at {{$json.company}} | {{$json.url}}"
+      },
+      "name": "Send Email Results",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [750, 300]
+    }
+  ],
+  "connections": {
+    "Scrape WeWorkRemotely HTML": {
+      "main": [
+        [
+          {
+            "node": "Parse and Filter Jobs (JS Only)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse and Filter Jobs (JS Only)": {
+      "main": [
+        [
+          {
+            "node": "Send Email Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
