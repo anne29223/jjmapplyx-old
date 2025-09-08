@@ -27,11 +27,8 @@ interface ControlPanelProps {
     powerAutomateFlow?: string;
     webhook_power_automate?: string;
     n8n_webhook_url?: string;
-<<<<<<< HEAD
-    github_token?: string;
-    github_repo?: string;
-=======
->>>>>>> fed2c2426af020fe81aac46e74b03937fb045b5a
+  github_token?: string;
+  github_repo?: string;
   };
   onUpdateSettings: (settings: any) => void;
 }
