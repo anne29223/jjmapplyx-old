@@ -12,7 +12,7 @@ const USER_ID = process.env.USER_ID || 'default-user';
 const SEARCH_QUERY = process.env.SEARCH_QUERY || 'hourly work';
 const LOCATION = process.env.LOCATION || 'remote';
 const JOB_BOARDS = process.env.JOB_BOARDS ? process.env.JOB_BOARDS.split(',') : [
-  'snagajob', 'indeedflex', 'ziprecruiter', 'instawork', 'veryable', 'bluecrew'
+  'snagajob', 'indeedflex', 'ziprecruiter', 'instawork', 'veryable', 'bluecrew', 'remoteok', 'indeed'
 ];
 
 // Job board configurations
@@ -67,6 +67,21 @@ const JOB_BOARD_CONFIGS = {
       q: SEARCH_QUERY,
       l: LOCATION
     }
+  },
+  remoteok: {
+    name: 'RemoteOK',
+    baseUrl: 'https://remoteok.com/api',
+    params: {}
+  },
+  indeed: {
+    name: 'Indeed',
+    baseUrl: 'https://www.indeed.com/jobs',
+    params: {
+      q: `${SEARCH_QUERY} immediate hire`,
+      l: LOCATION,
+      fromage: '3',
+      limit: '50'
+    }
   }
 };
 
@@ -74,27 +89,81 @@ async function scrapeJobBoard(boardKey, config) {
   console.log(`Scraping ${config.name}...`);
   
   try {
-    const url = new URL(config.baseUrl);
-    Object.entries(config.params).forEach(([key, value]) => {
-      url.searchParams.append(key, value);
-    });
-
-    const response = await fetch(url.toString(), {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-      },
-      timeout: 15000
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    let jobs = [];
+    if (boardKey === 'remoteok') {
+      const response = await fetch(config.baseUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        },
+        timeout: 15000
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      const data = await response.json();
+      jobs = data.map(job => ({
+        title: job.position,
+        company: job.company,
+        url: job.url,
+        source: 'RemoteOK',
+        user_id: USER_ID,
+        dateFound: new Date().toISOString(),
+        payRange: job.salary || 'Varies',
+        type: 'remote',
+        resumeRequired: false,
+        status: 'pending',
+        notes: `Found via GitHub Actions automation from RemoteOK`
+      }));
+      console.log(`Found ${jobs.length} jobs from RemoteOK`);
+      return jobs;
+    } else if (boardKey === 'indeed') {
+      const url = new URL(config.baseUrl);
+      Object.entries(config.params).forEach(([key, value]) => {
+        url.searchParams.append(key, value);
+      });
+      const response = await fetch(url.toString(), {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        },
+        timeout: 15000
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      const html = await response.text();
+      // Basic HTML parsing for Indeed jobs (improve as needed)
+      const jobRegex = /<a[^>]*href="([^"]*)"[^>]*>.*?<span[^>]*>([^<]*)<\/span>.*?<span[^>]*class="companyName"[^>]*>.*?<a[^>]*>([^<]*)<\/a>/g;
+      let match;
+      while ((match = jobRegex.exec(html)) !== null) {
+        jobs.push({
+          title: match[2].trim(),
+          company: match[3].trim(),
+          url: match[1].startsWith('/') ? `https://www.indeed.com${match[1]}` : match[1],
+          source: 'Indeed',
+          user_id: USER_ID,
+          dateFound: new Date().toISOString(),
+          payRange: 'Varies',
+          type: 'hourly',
+          resumeRequired: true,
+          status: 'pending',
+          notes: `Found via GitHub Actions automation from Indeed`
+        });
+      }
+      console.log(`Found ${jobs.length} jobs from Indeed`);
+      return jobs;
+    } else {
+      const url = new URL(config.baseUrl);
+      Object.entries(config.params).forEach(([key, value]) => {
+        url.searchParams.append(key, value);
+      });
+      const response = await fetch(url.toString(), {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        },
+        timeout: 15000
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      const html = await response.text();
+      jobs = parseJobBoard(boardKey, html, config.name);
+      console.log(`Found ${jobs.length} jobs from ${config.name}`);
+      return jobs;
     }
-
-    const html = await response.text();
-    const jobs = parseJobBoard(boardKey, html, config.name);
-    
-    console.log(`Found ${jobs.length} jobs from ${config.name}`);
-    return jobs;
   } catch (error) {
     console.error(`Error scraping ${config.name}:`, error.message);
     return [];

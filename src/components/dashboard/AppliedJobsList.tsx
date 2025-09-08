@@ -53,19 +53,26 @@ export const AppliedJobsList = () => {
 
   const getStatusIcon = (status: string) => {
     switch (status.toLowerCase()) {
+  // User-friendly status text for job applications
+  const getStatusText = (status: string) => {
+    switch (status.toLowerCase()) {
       case 'applied':
-        return <Clock className="h-4 w-4" />;
+        return 'Application sent';
       case 'interviewing':
       case 'interview_scheduled':
-        return <CheckCircle className="h-4 w-4" />;
+        return 'Interview scheduled';
+      case 'offer_received':
+        return 'Offer received';
       case 'rejected':
-        return <XCircle className="h-4 w-4" />;
+        return 'Application rejected';
+      case 'failed':
+        return 'Failed to apply';
+      case 'pending':
+        return 'Pending';
       default:
-        return <Clock className="h-4 w-4" />;
+        return 'Status unknown';
     }
   };
-
-  const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case 'applied':
         return 'default';
@@ -137,7 +144,7 @@ export const AppliedJobsList = () => {
                     className="flex items-center gap-1"
                   >
                     {getStatusIcon(app.status)}
-                    {app.status.replace('_', ' ')}
+                    {getStatusText(app.status)}
                   </Badge>
                 </div>
               </div>
