@@ -2,9 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, Clock, CheckCircle, XCircle, ExternalLink } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { Download, CheckCircle, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 
 interface Application {
@@ -17,8 +15,6 @@ interface Application {
 }
 
 export const AppliedJobsList = () => {
-  // For now, we'll show a message about GitHub Actions
-  // In the future, this could connect to GitHub Actions logs or a separate tracking system
   const applications: Application[] = [];
 
   const downloadCSV = () => {
@@ -51,7 +47,6 @@ export const AppliedJobsList = () => {
     toast.success("Application list downloaded successfully");
   };
 
-  // User-friendly status text for job applications
   const getStatusText = (status: string) => {
     switch (status.toLowerCase()) {
       case 'applied':
