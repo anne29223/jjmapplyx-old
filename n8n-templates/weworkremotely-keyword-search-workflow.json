@@ -1,0 +1,59 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "url": "https://weworkremotely.com/categories/remote-programming-jobs.json",
+        "options": {}
+      },
+      "name": "Scrape WeWorkRemotely",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "const keywords = ['project manager', 'business analyst', 'developer', 'automation'];\nreturn items[0].json.jobs.filter(job => {\n  const title = job.title ? job.title.toLowerCase() : '';\n  return keywords.some(k => title.includes(k));\n}).map(job => ({ json: job }));"
+      },
+      "name": "Filter Jobs by Keywords",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "fromEmail": "noreply@yourdomain.com",
+        "toEmail": "your@email.com",
+        "subject": "Filtered WeWorkRemotely Jobs",
+        "text": "={{ $json.title }} at {{$json.company_name}} | {{$json.url}}"
+      },
+      "name": "Send Email Results",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [750, 300]
+    }
+  ],
+  "connections": {
+    "Scrape WeWorkRemotely": {
+      "main": [
+        [
+          {
+            "node": "Filter Jobs by Keywords",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Jobs by Keywords": {
+      "main": [
+        [
+          {
+            "node": "Send Email Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

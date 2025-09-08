@@ -1,0 +1,79 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "url": "https://remoteok.com/api",
+        "options": {}
+      },
+      "name": "Scrape RemoteOK",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "const keywords = ['project manager', 'business analyst', 'developer', 'automation'];\nreturn items[0].json.filter(job => {\n  const title = job.position ? job.position.toLowerCase() : '';\n  return keywords.some(k => title.includes(k));\n}).map(job => ({ json: job }));"
+      },
+      "name": "Filter Jobs by Keywords",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(item => {\n  // Flag premium/external jobs\n  const isPremium = item.json.url && item.json.url.includes('premium');\n  return { json: { ...item.json, isPremium } };\n});"
+      },
+      "name": "Flag Premium Jobs",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [750, 300]
+    },
+    {
+      "parameters": {
+        "fromEmail": "noreply@yourdomain.com",
+        "toEmail": "your@email.com",
+        "subject": "Filtered RemoteOK Jobs",
+        "text": "={{ $json.position }} at {{$json.company}} | Premium: {{$json.isPremium}} | {{$json.url}}"
+      },
+      "name": "Send Email Results",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [1000, 300]
+    }
+  ],
+  "connections": {
+    "Scrape RemoteOK": {
+      "main": [
+        [
+          {
+            "node": "Filter Jobs by Keywords",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Jobs by Keywords": {
+      "main": [
+        [
+          {
+            "node": "Flag Premium Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Flag Premium Jobs": {
+      "main": [
+        [
+          {
+            "node": "Send Email Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
