@@ -12,11 +12,27 @@ const USER_ID = process.env.USER_ID || 'default-user';
 const SEARCH_QUERY = process.env.SEARCH_QUERY || 'hourly work';
 const LOCATION = process.env.LOCATION || 'remote';
 const JOB_BOARDS = process.env.JOB_BOARDS ? process.env.JOB_BOARDS.split(',') : [
-  'snagajob', 'indeedflex', 'ziprecruiter', 'instawork', 'veryable', 'bluecrew', 'remoteok', 'indeed'
+  'snagajob', 'indeedflex', 'ziprecruiter', 'instawork', 'veryable', 'bluecrew', 'remoteok', 'indeed', 'jobrightai'
 ];
+  jobrightai: {
+    name: 'JobRight.ai',
+    baseUrl: 'https://jobright.ai/api/jobs',
+    params: {
+      q: SEARCH_QUERY,
+      location: LOCATION
+    }
+  },
 
 // Job board configurations
 const JOB_BOARD_CONFIGS = {
+  jobrightai: {
+    name: 'JobRight.ai',
+    baseUrl: 'https://jobright.ai/api/jobs',
+    params: {
+      q: SEARCH_QUERY,
+      location: LOCATION
+    }
+  },
   snagajob: {
     name: 'Snagajob',
     baseUrl: 'https://www.snagajob.com/jobs/search',
