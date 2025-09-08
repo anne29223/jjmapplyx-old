@@ -1,1 +1,7 @@
-# This workflow is disabled and should be ignored. Use apply.yml instead.
+name: Disabled Workflow
+on: workflow_dispatch
+jobs:
+	noop:
+		runs-on: ubuntu-latest
+		steps:
+			- run: echo "This workflow is disabled. Use apply.yml instead."
