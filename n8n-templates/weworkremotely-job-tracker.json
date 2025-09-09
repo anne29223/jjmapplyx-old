@@ -1,0 +1,79 @@
+{
+  "name": "WeWorkRemotely Job Tracker",
+  "nodes": [
+    {
+      "name": "Fetch Job Listings",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "url": "https://weworkremotely.com/remote-jobs",
+        "options": {
+          "responseFormat": "string"
+        }
+      },
+      "position": [250, 300]
+    },
+    {
+      "name": "Parse and Filter Jobs",
+      "type": "n8n-nodes-base.function",
+      "parameters": {
+        "functionCode": "const html = items[0].json;\nconst keywords = ['project manager', 'business analyst', 'developer', 'automation'];\nconst jobRegex = /<li[^>]*>([\\s\\S]*?<a[^>]*href=\\"([^\\"]+)\\"[^>]*>[\\s\\S]*?<span class=\\"title\\">([^<]+)<\\/span>[\\s\\S]*?<span class=\\"company\\">([^<]+)<\\/span>[\\s\\S]*?)<\\/li>/g;\nconst jobs = [];\nlet match;\nwhile ((match = jobRegex.exec(html)) !== null) {\n  const url = 'https://weworkremotely.com' + match[2];\n  const title = match[3];\n  const company = match[4];\n  if (keywords.some(k => title.toLowerCase().includes(k))) {\n    jobs.push({ title, company, url, date: new Date().toISOString() });\n  }\n}\nreturn jobs.map(job => ({ json: job }));"
+      },
+      "position": [500, 300]
+    },
+    {
+      "name": "Log to Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "parameters": {
+        "authentication": "oAuth2",
+        "sheetId": "YOUR_SHEET_ID",
+        "range": "Sheet1!A:D",
+        "valueInputMode": "RAW",
+        "options": {},
+        "data": [
+          {
+            "values": [
+              "={{$json.title}}",
+              "={{$json.company}}",
+              "={{$json.url}}",
+              "={{$json.date}}"
+            ]
+          }
+        ]
+      },
+      "position": [750, 250]
+    },
+    {
+      "name": "Send Email Summary",
+      "type": "n8n-nodes-base.emailSend",
+      "parameters": {
+        "fromEmail": "noreply@yourdomain.com",
+        "toEmail": "your@email.com",
+        "subject": "New Job Matches from WeWorkRemotely",
+        "text": "={{$json.title}} at {{$json.company}} | {{$json.url}}"
+      },
+      "position": [750, 350]
+    },
+    {
+      "name": "Daily Trigger",
+      "type": "n8n-nodes-base.cron",
+      "parameters": {
+        "triggerTimes": [{ "hour": 8, "minute": 0 }]
+      },
+      "position": [100, 300]
+    }
+  ],
+  "connections": {
+    "Daily Trigger": {
+      "main": [[{ "node": "Fetch Job Listings", "type": "main", "index": 0 }]]
+    },
+    "Fetch Job Listings": {
+      "main": [[{ "node": "Parse and Filter Jobs", "type": "main", "index": 0 }]]
+    },
+    "Parse and Filter Jobs": {
+      "main": [
+        [{ "node": "Log to Google Sheets", "type": "main", "index": 0 }],
+        [{ "node": "Send Email Summary", "type": "main", "index": 0 }]
+      ]
+    }
+  }
+}
