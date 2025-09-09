@@ -1,4 +1,6 @@
 {
+  "name": "WeWorkRemotely HTML Keyword Search",
+  "active": false,
   "nodes": [
     {
       "parameters": {
@@ -58,5 +60,7 @@
         ]
       ]
     }
-  }
+  },
+  "settings": {},
+  "version": 1
 }
