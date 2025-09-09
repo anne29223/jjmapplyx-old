@@ -9,7 +9,7 @@
           "responseFormat": "string",
           "headers": {}
         }
-      },
+        "functionCode": "const html = items[0].json.body || items[0].json;\nconst keywords = ['project manager', 'business analyst', 'developer', 'automation'];\nconst jobRegex = /<li[^>]*>([\\s\\S]*?<a[^>]*href=\\"([^\\"]+)\\"[^>]*>[\\s\\S]*?<span class=\\"title\\">([^<]+)<\\/span>[\\s\\S]*?<span class=\\"company\\">([^<]+)<\\/span>[\\s\\S]*?)<\\/li>/g;\nconst jobs = [];\nlet match;\nwhile ((match = jobRegex.exec(html)) !== null) {\n  const url = 'https://weworkremotely.com' + match[2];\n  const title = match[3].toLowerCase();\n  const company = match[4];\n  if (keywords.some(k => title.includes(k))) {\n    jobs.push({ title, company, url });\n  }\n}\nreturn jobs.map(job => ({ json: job }));"
       "name": "Scrape WeWorkRemotely HTML",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 1,
@@ -55,6 +55,9 @@
           {
             "node": "Send Email Results",
             "type": "main",
+      "id": "WeWorkRemotely-Keyword-Search-Workflow",
+      "createdAt": "2025-09-08T00:00:00.000Z",
+      "updatedAt": "2025-09-08T00:00:00.000Z"
             "index": 0
           }
         ]
