@@ -1,0 +1,87 @@
+{
+  "name": "WeWorkRemotely Full Job Automation",
+  "nodes": [
+    {
+      "id": "1",
+      "name": "Scrape WeWorkRemotely HTML",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "parameters": {
+        "url": "https://weworkremotely.com/remote-jobs",
+        "options": {
+          "responseFormat": "string",
+          "headers": {}
+        }
+      }
+    },
+    {
+      "id": "2",
+      "name": "Parse and Filter Jobs",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [500, 300],
+      "parameters": {
+        "functionCode": "const html = items[0].json.body || items[0].json;\nconst keywords = ['automation', 'project manager', 'business analyst'];\nconst jobRegex = /<li[^>]*>([\\s\\S]*?<a[^>]*href=\\"([^\\"]+)\\"[^>]*>[\\s\\S]*?<span class=\\"title\\">([^<]+)<\\/span>[\\s\\S]*?<span class=\\"company\\">([^<]+)<\\/span>[\\s\\S]*?)<\\/li>/g;\nconst jobs = [];\nlet match;\nwhile ((match = jobRegex.exec(html)) !== null) {\n  const url = 'https://weworkremotely.com' + match[2];\n  const title = match[3].toLowerCase();\n  const company = match[4];\n  if (keywords.some(k => title.includes(k))) {\n    jobs.push({ title: match[3], company, url });\n  }\n}\nreturn jobs.map(job => ({ json: job }));"
+      }
+    },
+    {
+      "id": "3",
+      "name": "Log to Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [750, 300],
+      "parameters": {
+        "sheetId": "16WSjE7WqXw73XNPr63rsQ6sli9WmTr1H",
+        "range": "Sheet1!A1:E1",
+        "valueInputOption": "RAW",
+        "values": "={{ [$json.title, $json.company, $json.url, new Date().toISOString(), 'pending'] }}"
+      }
+    },
+    {
+      "id": "4",
+      "name": "Send Confirmation Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [1000, 300],
+      "parameters": {
+        "fromEmail": "info35185@gmail.com",
+        "toEmail": "info35185@gmail.com",
+        "subject": "Applied to {{$json.title}} at {{$json.company}}",
+        "text": "You applied to {{$json.title}} at {{$json.company}}.\nLink: {{$json.url}}\nDate: {{new Date().toLocaleString()}}"
+      }
+    }
+  ],
+  "connections": {
+    "Scrape WeWorkRemotely HTML": {
+      "main": [
+        [
+          {
+            "node": "Parse and Filter Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse and Filter Jobs": {
+      "main": [
+        [
+          {
+            "node": "Log to Google Sheets",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Confirmation Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {},
+  "version": 1
+}
