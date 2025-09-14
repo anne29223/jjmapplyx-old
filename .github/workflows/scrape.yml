@@ -1,9 +1,9 @@
-name: Run Scraper Every Hour
+name: Daily Job Scraper
 
 on:
   schedule:
-    - cron: '0 * * * *' # Runs at minute 0 every hour
-  workflow_dispatch:
+    - cron: '0 0 * * *'  # Once daily at midnight UTC
+  workflow_dispatch:      # Allows manual trigger
 
 jobs:
   run-scraper:
@@ -18,3 +18,10 @@ jobs:
         run: pip install -r requirements.txt
       - name: Run scraper
         run: python my_scraper.py
+      - name: Upload jobs file artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: scraped-jobs
+          path: jobs.json
+          overwrite: true
+
