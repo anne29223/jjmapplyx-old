@@ -1,0 +1,91 @@
+{
+  "name": "Remote OK Scrape + Google Sheets + Email",
+  "nodes": [
+    {
+      "parameters": {
+        "triggerTimes": { "item": [{ "hour": 9, "minute": 0 }] }
+      },
+      "name": "Cron",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://remoteok.com/remote-dev-jobs",
+        "method": "GET",
+        "responseFormat": "string",
+        "headerParametersUi": {
+          "parameter": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+            }
+          ]
+        }
+      },
+      "name": "Fetch HTML",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Parse Remote OK HTML\nconst cheerio = require('cheerio');\nconst html = items[0].json.body;\nconst $ = cheerio.load(html);\nlet jobs = [];\n\n$('tr.job').each((i, el) => {\n  const id = $(el).attr('data-id');\n  const position = $(el).find('td.position h2').text().trim();\n  const company = $(el).find('td.company h3').text().trim();\n  const location = $(el).find('td.location').text().trim();\n  const url = 'https://remoteok.com' + $(el).attr('data-url');\n  if(id && position){\n    jobs.push({ json: { id, position, company, location, url } });\n  }\n});\nreturn jobs;"
+      },
+      "name": "Parse HTML",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "sheetId": "<YOUR_GOOGLE_SHEET_ID>",
+        "range": "Sheet1!A:E",
+        "columns": [
+          { "value": "={{$json['id']}}" },
+          { "value": "={{$json['position']}}" },
+          { "value": "={{$json['company']}}" },
+          { "value": "={{$json['location']}}" },
+          { "value": "={{$json['url']}}" }
+        ]
+      },
+      "name": "Append to Google Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [850, 300],
+      "credentials": { "googleSheetsOAuth2": "<YOUR_GOOGLE_SHEETS_CREDENTIALS>" }
+    },
+    {
+      "parameters": {
+        "functionCode": "// Build HTML table for email\nlet html = '<h3>New Remote OK Jobs</h3>';\nif(items.length>0){\n  html += '<table border=\"1\" cellpadding=\"5\" cellspacing=\"0\" style=\"border-collapse: collapse;\">';\n  html += '<tr><th>Position</th><th>Company</th><th>Location</th><th>Link</th></tr>';\n  items.forEach(job=>{\n    html += `<tr><td>${job.json.position}</td><td>${job.json.company}</td><td>${job.json.location}</td><td><a href='${job.json.url}'>Link</a></td></tr>`;\n  });\n  html += '</table>';\n}else{\n  html = '<p>No new jobs today.</p>';\n}\nreturn [{ json: { emailHtml: html } }];"
+      },
+      "name": "Build HTML Email",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1050, 300]
+    },
+    {
+      "parameters": {
+        "fromEmail": "<YOUR_EMAIL>",
+        "toEmail": "<RECIPIENT_EMAIL>",
+        "subject": "New Remote OK Jobs",
+        "html": "={{$json['emailHtml']}}"
+      },
+      "name": "Email Notification",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [1250, 300],
+      "credentials": { "smtp": "<YOUR_SMTP_CREDENTIALS>" }
+    }
+  ],
+  "connections": {
+    "Cron": { "main": [[{ "node": "Fetch HTML", "type": "main", "index": 0 }]] },
+    "Fetch HTML": { "main": [[{ "node": "Parse HTML", "type": "main", "index": 0 }]] },
+    "Parse HTML": { "main": [[{ "node": "Append to Google Sheet", "type": "main", "index": 0 }]] },
+    "Append to Google Sheet": { "main": [[{ "node": "Build HTML Email", "type": "main", "index": 0 }]] },
+    "Build HTML Email": { "main": [[{ "node": "Email Notification", "type": "main", "index": 0 }]] }
+  },
+  "active": false
+}

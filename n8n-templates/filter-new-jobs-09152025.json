@@ -1,0 +1,37 @@
+// Skip metadata and filter by keywords/location
+const keywords = ['developer','remote'];
+const location = 'remote';
+
+// Load CSV of existing jobs if it exists
+const fs = require('fs');
+const filePath = '/data/jobs.csv';
+let existingIds = [];
+if (fs.existsSync(filePath)) {
+  const csv = fs.readFileSync(filePath, 'utf8');
+  existingIds = csv.split('\n').slice(1).map(line => line.split(',')[0]);
+}
+
+const newJobs = items.slice(1).filter(item => {
+  const id = item.json.id;
+  const title = item.json.position ? item.json.position.toLowerCase() : '';
+  const loc = item.json.location ? item.json.location.toLowerCase() : '';
+  return !existingIds.includes(id) && keywords.some(k => title.includes(k)) && loc.includes(location);
+}).map(item => ({ json: item.json }));
+
+// Build HTML table for email
+let html = '<h3>New Remote OK Jobs</h3>';
+html += '<table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse;">';
+html += '<tr><th>Position</th><th>Company</th><th>Location</th><th>Link</th></tr>';
+for (const job of newJobs) {
+  html += `<tr>
+    <td>${job.json.position}</td>
+    <td>${job.json.company}</td>
+    <td>${job.json.location}</td>
+    <td><a href="${job.json.url}">Link</a></td>
+  </tr>`;
+}
+html += '</table>';
+
+return newJobs.map(job => ({
+  json: { ...job.json, emailHtml: html }
+}));

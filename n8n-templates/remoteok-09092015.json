@@ -1,0 +1,96 @@
+{
+  "name": "Remote OK Job Fetcher with Email",
+  "nodes": [
+    {
+      "parameters": {
+        "triggerTimes": { "item": [{ "hour": 9, "minute": 0 }] }
+      },
+      "name": "Cron",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://remoteok.com/api",
+        "method": "GET",
+        "responseFormat": "json",
+        "headerParametersUi": {
+          "parameter": [
+            { "name": "User-Agent", "value": "n8n-job-fetcher" },
+            { "name": "Accept", "value": "application/json" }
+          ]
+        }
+      },
+      "name": "Fetch Jobs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Skip metadata and filter by keywords/location\nconst keywords = [\"developer\",\"remote\"];\nconst location = \"remote\";\n\nreturn items.slice(1).filter(item => {\n  const title = item.json.position ? item.json.position.toLowerCase() : \"\";\n  const loc = item.json.location ? item.json.location.toLowerCase() : \"\";\n  return keywords.some(k => title.includes(k)) && loc.includes(location);\n}).map(item => ({ json: item.json }));"
+      },
+      "name": "Filter Jobs",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "operation": "lookup",
+        "sheetId": "<YOUR_GOOGLE_SHEET_ID>",
+        "range": "Sheet1!A:A",
+        "lookupColumn": 1,
+        "lookupValue": "={{$json[\"id\"]}}",
+        "options": { "createIfNotExists": true }
+      },
+      "name": "Check Duplicate",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [850, 300],
+      "credentials": { "googleSheetsOAuth2Api": "<YOUR_GOOGLE_SHEETS_CREDENTIALS>" }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "sheetId": "<YOUR_GOOGLE_SHEET_ID>",
+        "range": "Sheet1!A:E",
+        "valueInputMode": "RAW",
+        "columns": [
+          { "value": "={{$json[\"id\"]}}" },
+          { "value": "={{$json[\"position\"]}}" },
+          { "value": "={{$json[\"company\"]}}" },
+          { "value": "={{$json[\"location\"]}}" },
+          { "value": "={{$json[\"url\"]}}" }
+        ]
+      },
+      "name": "Add to Google Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [1050, 300],
+      "credentials": { "googleSheetsOAuth2Api": "<YOUR_GOOGLE_SHEETS_CREDENTIALS>" }
+    },
+    {
+      "parameters": {
+        "fromEmail": "<YOUR_EMAIL>",
+        "toEmail": "<RECIPIENT_EMAIL>",
+        "subject": "New Remote OK Jobs",
+        "text": "New Remote OK jobs have been added:\n\n{{$json[\"position\"]}} at {{$json[\"company\"]}} - {{$json[\"url\"]}}"
+      },
+      "name": "Email Notification",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [1250, 300],
+      "credentials": { "smtp": "<YOUR_SMTP_CREDENTIALS>" }
+    }
+  ],
+  "connections": {
+    "Cron": { "main": [[{ "node": "Fetch Jobs", "type": "main", "index": 0 }]] },
+    "Fetch Jobs": { "main": [[{ "node": "Filter Jobs", "type": "main", "index": 0 }]] },
+    "Filter Jobs": { "main": [[{ "node": "Check Duplicate", "type": "main", "index": 0 }]] },
+    "Check Duplicate": { "main": [[{ "node": "Add to Google Sheet", "type": "main", "index": 0 }]] },
+    "Add to Google Sheet": { "main": [[{ "node": "Email Notification", "type": "main", "index": 0 }]] }
+  },
+  "active": false
+}

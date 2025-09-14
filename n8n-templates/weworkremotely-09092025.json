@@ -1,0 +1,180 @@
+{
+  "name": "WeWorkRemotely Job Fetcher",
+  "nodes": [
+    {
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {
+              "hour": 9,
+              "minute": 0
+            }
+          ]
+        }
+      },
+      "name": "Cron",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://weworkremotely.com/api/v1/jobs.json",
+        "options": {},
+        "responseFormat": "json",
+        "jsonParameters": true
+      },
+      "name": "Fetch Jobs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "boolean": [],
+          "number": [],
+          "string": [
+            {
+              "name": "keywords",
+              "value": "[\"developer\",\"remote\"]"
+            },
+            {
+              "name": "location",
+              "value": "remote"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Set Filters",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [],
+          "number": [],
+          "string": [
+            {
+              "value1": "={{$json[\"title\"]}}",
+              "operation": "contains",
+              "value2": "={{$json[\"keywords\"]}}"
+            },
+            {
+              "value1": "={{$json[\"location\"]}}",
+              "operation": "equal",
+              "value2": "={{$json[\"location\"]}}"
+            }
+          ]
+        }
+      },
+      "name": "Filter Jobs",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "sheetId": "<YOUR_GOOGLE_SHEET_ID>",
+        "range": "Sheet1!A:E",
+        "valueInputMode": "RAW",
+        "options": {},
+        "columns": [
+          {
+            "value": "={{$json[\"title\"]}}"
+          },
+          {
+            "value": "={{$json[\"company\"]}}"
+          },
+          {
+            "value": "={{$json[\"location\"]}}"
+          },
+          {
+            "value": "={{$json[\"salary\"]}}"
+          },
+          {
+            "value": "={{$json[\"url\"]}}"
+          }
+        ]
+      },
+      "name": "Add to Google Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [1050, 300],
+      "credentials": {
+        "googleSheetsOAuth2Api": "<YOUR_GOOGLE_SHEETS_CREDENTIALS>"
+      }
+    },
+    {
+      "parameters": {
+        "channel": "#jobs",
+        "text": "New We Work Remotely jobs found:\nTitle: {{$json[\"title\"]}}\nCompany: {{$json[\"company\"]}}\nLocation: {{$json[\"location\"]}}\nApply: {{$json[\"url\"]}}"
+      },
+      "name": "Slack Notification",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [1250, 300],
+      "credentials": {
+        "slackApi": "<YOUR_SLACK_CREDENTIALS>"
+      }
+    }
+  ],
+  "connections": {
+    "Cron": {
+      "main": [
+        [
+          {
+            "node": "Fetch Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Jobs": {
+      "main": [
+        [
+          {
+            "node": "Set Filters",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Filters": {
+      "main": [
+        [
+          {
+            "node": "Filter Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Jobs": {
+      "main": [
+        [
+          {
+            "node": "Add to Google Sheet",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Slack Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "id": "1"
+}
