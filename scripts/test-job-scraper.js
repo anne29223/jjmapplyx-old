@@ -5,7 +5,7 @@
  * Run with: node scripts/test-job-scraper.js
  */
 
-const { createClient } = require('@supabase/supabase-js');
+import { createClient } from '@supabase/supabase-js';
 
 // Initialize Supabase client
 const supabaseUrl = 'https://tzvzranspvtifnlgrkwi.supabase.co';

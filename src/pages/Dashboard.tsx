@@ -10,6 +10,7 @@ import { JobSiteConfig } from "@/components/dashboard/JobSiteConfig";
 import { Analytics } from "@/components/dashboard/Analytics";
 import { ExportImport } from "@/components/dashboard/ExportImport";
 import { ScrapedJobsList } from "@/components/dashboard/ScrapedJobsList";
+import { ScrapedJobsTest } from "@/components/dashboard/ScrapedJobsTest";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -305,7 +306,7 @@ export const Dashboard = () => {
           </TabsContent>
 
           <TabsContent value="scraped">
-            <ScrapedJobsList />
+            <ScrapedJobsTest />
           </TabsContent>
 
           <TabsContent value="analytics">
