@@ -1,0 +1,49 @@
+<h1>Job Board</h1>
+<a href="#" id="syncJobsBtn">🔄 Sync Jobs</a>
+<div id="syncStatus"></div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Title</th>
+      <th>Company</th>
+      <th>Location</th>
+      <th>Posted</th>
+      <th>Link</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% jobs.forEach(job => { %>
+      <tr>
+        <td><%= job.title %></td>
+        <td><%= job.company %></td>
+        <td><%= job.location %></td>
+        <td><%= job.posted_at ? job.posted_at.toDateString() : "" %></td>
+        <td><a href="<%= job.url %>" target="_blank">Apply</a></td>
+      </tr>
+    <% }) %>
+  </tbody>
+</table>
+
+<script>
+document.getElementById("syncJobsBtn").addEventListener("click", async (e) => {
+  e.preventDefault();
+  const status = document.getElementById("syncStatus");
+  status.innerText = "Syncing jobs…";
+
+  try {
+    const res = await fetch("/dashboard/jobs/sync");
+    const data = await res.json();
+
+    if (data.success) {
+      status.innerText = `✅ Synced ${data.synced} jobs`;
+      setTimeout(() => location.reload(), 1000);
+    } else {
+      status.innerText = `❌ Error: ${data.error}`;
+    }
+  } catch (err) {
+    status.innerText = `❌ Fetch error: ${err.message}`;
+  }
+});
+</script>
+

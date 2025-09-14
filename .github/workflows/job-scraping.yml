@@ -1,21 +1,39 @@
-name: Job Scraping
-on:
-  schedule:
-    - cron: '0 7 * * *'
-  workflow_dispatch:
-jobs:
-  scrape:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20.x'
-      - name: Install dependencies
-        run: npm ci
-      - name: Run job scraping script
-        run: node automation/jobRunner.js
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+import fetch from 'node-fetch';
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+
+async function scrapeRemoteOK() {
+  const response = await fetch('https://remoteok.com/api', {
+    headers: { 'User-Agent': 'Mozilla/5.0' }
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch jobs: ${response.status}`);
+  }
+
+  const jobs = await response.json();
+
+  // Skip the first item (metadata)
+  const jobListings = jobs.slice(1);
+
+  for (const job of jobListings) {
+    const { id, position, company, url, tags, location } = job;
+
+    // Insert into Supabase
+    await supabase
+      .from('jobs')
+      .upsert({
+        id,
+        title: position,
+        company,
+        url,
+        tags,
+        location
+      }, { onConflict: ['id'] });
+  }
+
+  console.log(`Inserted ${jobListings.length} jobs from RemoteOK`);
+}
+
+scrapeRemoteOK().catch(console.error);
