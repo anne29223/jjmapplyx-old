@@ -11,6 +11,7 @@ import { Analytics } from "@/components/dashboard/Analytics";
 import { ExportImport } from "@/components/dashboard/ExportImport";
 import { ScrapedJobsList } from "@/components/dashboard/ScrapedJobsList";
 import { ScrapedJobsTest } from "@/components/dashboard/ScrapedJobsTest";
+import { ResumeUpload } from "@/components/dashboard/ResumeUpload";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -250,9 +251,10 @@ export const Dashboard = () => {
         </div>
 
         <Tabs defaultValue="jobs" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="jobs">Job Applications</TabsTrigger>
             <TabsTrigger value="scraped">Scraped Jobs</TabsTrigger>
+            <TabsTrigger value="resume">Resume</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="settings">Site Config</TabsTrigger>
             <TabsTrigger value="data">Export/Import</TabsTrigger>
@@ -307,6 +309,10 @@ export const Dashboard = () => {
 
           <TabsContent value="scraped">
             <ScrapedJobsList />
+          </TabsContent>
+
+          <TabsContent value="resume">
+            <ResumeUpload />
           </TabsContent>
 
           <TabsContent value="analytics">

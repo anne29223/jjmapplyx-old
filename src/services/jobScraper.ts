@@ -65,38 +65,22 @@ const JOB_BOARD_CONFIGS: Record<string, JobBoardConfig> = {
     },
     requiresPuppeteer: true
   },
-  remoteok: {
-    name: 'RemoteOK',
-    baseUrl: 'https://remoteok.com',
-    searchUrl: 'https://remoteok.com/api',
+  linkedin: {
+    name: 'LinkedIn',
+    baseUrl: 'https://www.linkedin.com',
+    searchUrl: 'https://www.linkedin.com/jobs/search',
     selectors: {
-      jobContainer: '.job',
-      title: '.company_and_position h2',
-      company: '.company_and_position h3',
-      location: '.location',
-      url: '.company_and_position a',
-      description: '.job_description',
-      salary: '.salary',
-      postedAt: '.time'
-    },
-    requiresPuppeteer: false
-  },
-  weworkremotely: {
-    name: 'We Work Remotely',
-    baseUrl: 'https://weworkremotely.com',
-    searchUrl: 'https://weworkremotely.com/categories/remote-programming-jobs',
-    selectors: {
-      jobContainer: '.jobs li',
-      title: '.title a',
-      company: '.company',
-      location: '.region',
-      url: '.title a',
-      description: '.description',
-      salary: '.salary',
-      postedAt: '.date'
+      jobContainer: '.jobs-search-results__list-item',
+      title: '.job-search-card__title a',
+      company: '.job-search-card__subtitle a',
+      location: '.job-search-card__location',
+      url: '.job-search-card__title a',
+      description: '.job-search-card__snippet',
+      salary: '.job-search-card__salary',
+      postedAt: '.job-search-card__listdate'
     },
     pagination: {
-      nextPage: '.pagination a[rel="next"]',
+      nextPage: '.jobs-search-pagination__next-button',
       maxPages: 3
     },
     requiresPuppeteer: true
@@ -121,22 +105,142 @@ const JOB_BOARD_CONFIGS: Record<string, JobBoardConfig> = {
     },
     requiresPuppeteer: true
   },
-  linkedin: {
-    name: 'LinkedIn',
-    baseUrl: 'https://www.linkedin.com',
-    searchUrl: 'https://www.linkedin.com/jobs/search',
+  naukri: {
+    name: 'Naukri',
+    baseUrl: 'https://www.naukri.com',
+    searchUrl: 'https://www.naukri.com/jobs-in-india',
     selectors: {
-      jobContainer: '.jobs-search-results__list-item',
-      title: '.job-search-card__title a',
-      company: '.job-search-card__subtitle a',
-      location: '.job-search-card__location',
-      url: '.job-search-card__title a',
-      description: '.job-search-card__snippet',
-      salary: '.job-search-card__salary',
-      postedAt: '.job-search-card__listdate'
+      jobContainer: '.jobTuple',
+      title: '.jobTupleHeader a',
+      company: '.jobTupleHeader .companyName',
+      location: '.jobTupleHeader .location',
+      url: '.jobTupleHeader a',
+      description: '.job-description',
+      salary: '.salary',
+      postedAt: '.jobTupleHeader .fleft .faded'
     },
     pagination: {
-      nextPage: '.jobs-search-pagination__next-button',
+      nextPage: '.pagination .next',
+      maxPages: 3
+    },
+    requiresPuppeteer: true
+  },
+  monster: {
+    name: 'Monster',
+    baseUrl: 'https://www.monster.com',
+    searchUrl: 'https://www.monster.com/jobs/search',
+    selectors: {
+      jobContainer: '[data-testid="job-card"]',
+      title: '[data-testid="job-title"] a',
+      company: '[data-testid="company-name"]',
+      location: '[data-testid="job-location"]',
+      url: '[data-testid="job-title"] a',
+      description: '[data-testid="job-description"]',
+      salary: '[data-testid="salary"]',
+      postedAt: '[data-testid="posted-date"]'
+    },
+    pagination: {
+      nextPage: '[data-testid="pagination-next"]',
+      maxPages: 3
+    },
+    requiresPuppeteer: true
+  },
+  simplyhired: {
+    name: 'SimplyHired',
+    baseUrl: 'https://www.simplyhired.com',
+    searchUrl: 'https://www.simplyhired.com/search',
+    selectors: {
+      jobContainer: '.SerpJob',
+      title: '.SerpJob-title a',
+      company: '.SerpJob-company',
+      location: '.SerpJob-location',
+      url: '.SerpJob-title a',
+      description: '.SerpJob-description',
+      salary: '.SerpJob-salary',
+      postedAt: '.SerpJob-age'
+    },
+    pagination: {
+      nextPage: '.pagination .next',
+      maxPages: 3
+    },
+    requiresPuppeteer: true
+  },
+  careercloud: {
+    name: 'CareerCloud',
+    baseUrl: 'https://www.careercloud.com',
+    searchUrl: 'https://www.careercloud.com/jobs',
+    selectors: {
+      jobContainer: '.job-listing',
+      title: '.job-listing h3 a',
+      company: '.job-listing .company',
+      location: '.job-listing .location',
+      url: '.job-listing h3 a',
+      description: '.job-listing .description',
+      salary: '.job-listing .salary',
+      postedAt: '.job-listing .date'
+    },
+    pagination: {
+      nextPage: '.pagination .next',
+      maxPages: 3
+    },
+    requiresPuppeteer: true
+  },
+  flexjobs: {
+    name: 'FlexJobs',
+    baseUrl: 'https://www.flexjobs.com',
+    searchUrl: 'https://www.flexjobs.com/search',
+    selectors: {
+      jobContainer: '.job',
+      title: '.job-title a',
+      company: '.job-company',
+      location: '.job-location',
+      url: '.job-title a',
+      description: '.job-description',
+      salary: '.job-salary',
+      postedAt: '.job-date'
+    },
+    pagination: {
+      nextPage: '.pagination .next',
+      maxPages: 3
+    },
+    requiresPuppeteer: true
+  },
+  careerbuilder: {
+    name: 'CareerBuilder',
+    baseUrl: 'https://www.careerbuilder.com',
+    searchUrl: 'https://www.careerbuilder.com/jobs',
+    selectors: {
+      jobContainer: '.data-results-content-parent',
+      title: '.data-results-content-parent h3 a',
+      company: '.data-results-content-parent .data-details span',
+      location: '.data-results-content-parent .data-details .job-location',
+      url: '.data-results-content-parent h3 a',
+      description: '.data-results-content-parent .data-snapshot',
+      salary: '.data-results-content-parent .data-snapshot .salary',
+      postedAt: '.data-results-content-parent .data-details .data-posted'
+    },
+    pagination: {
+      nextPage: '.pagination .next',
+      maxPages: 3
+    },
+    requiresPuppeteer: true
+  },
+  careeronestop: {
+    name: 'CareerOneStop',
+    baseUrl: 'https://www.careeronestop.org',
+    searchUrl: 'https://www.careeronestop.org/JobSearch/JobSearch.aspx',
+    selectors: {
+      jobContainer: '.job-result',
+      title: '.job-result .job-title a',
+      company: '.job-result .company-name',
+      location: '.job-result .job-location',
+      url: '.job-result .job-title a',
+      description: '.job-result .job-description',
+      salary: '.job-result .salary',
+      postedAt: '.job-result .job-date'
+    },
+    pagination: {
+      nextPage: '.pagination .next',
       maxPages: 3
     },
     requiresPuppeteer: true

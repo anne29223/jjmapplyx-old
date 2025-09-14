@@ -37,34 +37,139 @@ const JOB_BOARD_CONFIGS = {
       postedAt: '[data-testid="myJobsStateDate"]'
     }
   },
-  remoteok: {
-    name: 'RemoteOK',
-    baseUrl: 'https://remoteok.com',
-    searchUrl: 'https://remoteok.com/api',
+  linkedin: {
+    name: 'LinkedIn',
+    baseUrl: 'https://www.linkedin.com',
+    searchUrl: 'https://www.linkedin.com/jobs/search',
     selectors: {
-      jobContainer: '.job',
-      title: '.company_and_position h2',
-      company: '.company_and_position h3',
-      location: '.location',
-      url: '.company_and_position a',
-      description: '.job_description',
-      salary: '.salary',
-      postedAt: '.time'
+      jobContainer: '.jobs-search-results__list-item',
+      title: '.job-search-card__title a',
+      company: '.job-search-card__subtitle a',
+      location: '.job-search-card__location',
+      url: '.job-search-card__title a',
+      description: '.job-search-card__snippet',
+      salary: '.job-search-card__salary',
+      postedAt: '.job-search-card__listdate'
     }
   },
-  weworkremotely: {
-    name: 'We Work Remotely',
-    baseUrl: 'https://weworkremotely.com',
-    searchUrl: 'https://weworkremotely.com/categories/remote-programming-jobs',
+  glassdoor: {
+    name: 'Glassdoor',
+    baseUrl: 'https://www.glassdoor.com',
+    searchUrl: 'https://www.glassdoor.com/Job/jobs.htm',
     selectors: {
-      jobContainer: '.jobs li',
-      title: '.title a',
-      company: '.company',
-      location: '.region',
-      url: '.title a',
-      description: '.description',
+      jobContainer: '[data-test="jobListing"]',
+      title: '[data-test="job-title"] a',
+      company: '[data-test="employer-name"] a',
+      location: '[data-test="job-location"]',
+      url: '[data-test="job-title"] a',
+      description: '[data-test="job-description"]',
+      salary: '[data-test="detailSalary"]',
+      postedAt: '[data-test="job-age"]'
+    }
+  },
+  naukri: {
+    name: 'Naukri',
+    baseUrl: 'https://www.naukri.com',
+    searchUrl: 'https://www.naukri.com/jobs-in-india',
+    selectors: {
+      jobContainer: '.jobTuple',
+      title: '.jobTupleHeader a',
+      company: '.jobTupleHeader .companyName',
+      location: '.jobTupleHeader .location',
+      url: '.jobTupleHeader a',
+      description: '.job-description',
       salary: '.salary',
-      postedAt: '.date'
+      postedAt: '.jobTupleHeader .fleft .faded'
+    }
+  },
+  monster: {
+    name: 'Monster',
+    baseUrl: 'https://www.monster.com',
+    searchUrl: 'https://www.monster.com/jobs/search',
+    selectors: {
+      jobContainer: '[data-testid="job-card"]',
+      title: '[data-testid="job-title"] a',
+      company: '[data-testid="company-name"]',
+      location: '[data-testid="job-location"]',
+      url: '[data-testid="job-title"] a',
+      description: '[data-testid="job-description"]',
+      salary: '[data-testid="salary"]',
+      postedAt: '[data-testid="posted-date"]'
+    }
+  },
+  simplyhired: {
+    name: 'SimplyHired',
+    baseUrl: 'https://www.simplyhired.com',
+    searchUrl: 'https://www.simplyhired.com/search',
+    selectors: {
+      jobContainer: '.SerpJob',
+      title: '.SerpJob-title a',
+      company: '.SerpJob-company',
+      location: '.SerpJob-location',
+      url: '.SerpJob-title a',
+      description: '.SerpJob-description',
+      salary: '.SerpJob-salary',
+      postedAt: '.SerpJob-age'
+    }
+  },
+  careercloud: {
+    name: 'CareerCloud',
+    baseUrl: 'https://www.careercloud.com',
+    searchUrl: 'https://www.careercloud.com/jobs',
+    selectors: {
+      jobContainer: '.job-listing',
+      title: '.job-listing h3 a',
+      company: '.job-listing .company',
+      location: '.job-listing .location',
+      url: '.job-listing h3 a',
+      description: '.job-listing .description',
+      salary: '.job-listing .salary',
+      postedAt: '.job-listing .date'
+    }
+  },
+  flexjobs: {
+    name: 'FlexJobs',
+    baseUrl: 'https://www.flexjobs.com',
+    searchUrl: 'https://www.flexjobs.com/search',
+    selectors: {
+      jobContainer: '.job',
+      title: '.job-title a',
+      company: '.job-company',
+      location: '.job-location',
+      url: '.job-title a',
+      description: '.job-description',
+      salary: '.job-salary',
+      postedAt: '.job-date'
+    }
+  },
+  careerbuilder: {
+    name: 'CareerBuilder',
+    baseUrl: 'https://www.careerbuilder.com',
+    searchUrl: 'https://www.careerbuilder.com/jobs',
+    selectors: {
+      jobContainer: '.data-results-content-parent',
+      title: '.data-results-content-parent h3 a',
+      company: '.data-results-content-parent .data-details span',
+      location: '.data-results-content-parent .data-details .job-location',
+      url: '.data-results-content-parent h3 a',
+      description: '.data-results-content-parent .data-snapshot',
+      salary: '.data-results-content-parent .data-snapshot .salary',
+      postedAt: '.data-results-content-parent .data-details .data-posted'
+    }
+  },
+  careeronestop: {
+    name: 'CareerOneStop',
+    baseUrl: 'https://www.careeronestop.org',
+    searchUrl: 'https://www.careeronestop.org/JobSearch/JobSearch.aspx',
+    selectors: {
+      jobContainer: '.job-result',
+      title: '.job-result .job-title a',
+      company: '.job-result .company-name',
+      location: '.job-result .job-location',
+      url: '.job-result .job-title a',
+      description: '.job-result .job-description',
+      salary: '.job-result .salary',
+      postedAt: '.job-result .job-date'
     }
   }
 };
@@ -212,6 +317,132 @@ async function scrapeWeWorkRemotely(searchQuery: string, location: string): Prom
   }
 }
 
+async function scrapeLinkedIn(searchQuery: string, location: string): Promise<ScrapedJob[]> {
+  try {
+    const searchUrl = new URL('https://www.linkedin.com/jobs/search');
+    searchUrl.searchParams.set('keywords', searchQuery);
+    searchUrl.searchParams.set('location', location);
+
+    const response = await fetch(searchUrl.toString(), {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const html = await response.text();
+    const jobs: ScrapedJob[] = [];
+
+    // Simple regex-based parsing for LinkedIn
+    const jobRegex = /<a[^>]*href="([^"]*)"[^>]*>.*?<span[^>]*class="job-search-card__title"[^>]*>([^<]*)<\/span>.*?<span[^>]*class="job-search-card__subtitle"[^>]*>([^<]*)<\/span>/g;
+    let match;
+
+    while ((match = jobRegex.exec(html)) !== null && jobs.length < 20) {
+      const url = match[1].startsWith('/') ? `https://www.linkedin.com${match[1]}` : match[1];
+      const title = match[2].trim();
+      const company = match[3].trim();
+
+      if (title && company && url) {
+        jobs.push({
+          title,
+          company,
+          location: location || 'Remote',
+          url,
+          source: 'LinkedIn',
+          scraped_at: new Date().toISOString(),
+          status: 'pending'
+        });
+      }
+    }
+
+    return jobs;
+  } catch (error) {
+    console.error('Error scraping LinkedIn:', error);
+    return [];
+  }
+}
+
+async function scrapeGlassdoor(searchQuery: string, location: string): Promise<ScrapedJob[]> {
+  try {
+    const searchUrl = new URL('https://www.glassdoor.com/Job/jobs.htm');
+    searchUrl.searchParams.set('sc.keyword', searchQuery);
+    searchUrl.searchParams.set('locT', 'C');
+    searchUrl.searchParams.set('locId', '1');
+
+    const response = await fetch(searchUrl.toString(), {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const html = await response.text();
+    const jobs: ScrapedJob[] = [];
+
+    // Simple regex-based parsing for Glassdoor
+    const jobRegex = /<a[^>]*href="([^"]*)"[^>]*>.*?<span[^>]*class="jobTitle"[^>]*>([^<]*)<\/span>.*?<span[^>]*class="employerName"[^>]*>([^<]*)<\/span>/g;
+    let match;
+
+    while ((match = jobRegex.exec(html)) !== null && jobs.length < 20) {
+      const url = match[1].startsWith('/') ? `https://www.glassdoor.com${match[1]}` : match[1];
+      const title = match[2].trim();
+      const company = match[3].trim();
+
+      if (title && company && url) {
+        jobs.push({
+          title,
+          company,
+          location: location || 'Remote',
+          url,
+          source: 'Glassdoor',
+          scraped_at: new Date().toISOString(),
+          status: 'pending'
+        });
+      }
+    }
+
+    return jobs;
+  } catch (error) {
+    console.error('Error scraping Glassdoor:', error);
+    return [];
+  }
+}
+
+// Placeholder functions for other job boards
+async function scrapeNaukri(searchQuery: string, location: string): Promise<ScrapedJob[]> {
+  return []; // Placeholder - would need specific implementation
+}
+
+async function scrapeMonster(searchQuery: string, location: string): Promise<ScrapedJob[]> {
+  return []; // Placeholder - would need specific implementation
+}
+
+async function scrapeSimplyHired(searchQuery: string, location: string): Promise<ScrapedJob[]> {
+  return []; // Placeholder - would need specific implementation
+}
+
+async function scrapeCareerCloud(searchQuery: string, location: string): Promise<ScrapedJob[]> {
+  return []; // Placeholder - would need specific implementation
+}
+
+async function scrapeFlexJobs(searchQuery: string, location: string): Promise<ScrapedJob[]> {
+  return []; // Placeholder - would need specific implementation
+}
+
+async function scrapeCareerBuilder(searchQuery: string, location: string): Promise<ScrapedJob[]> {
+  return []; // Placeholder - would need specific implementation
+}
+
+async function scrapeCareerOneStop(searchQuery: string, location: string): Promise<ScrapedJob[]> {
+  return []; // Placeholder - would need specific implementation
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -244,14 +475,35 @@ serve(async (req) => {
       let jobs: ScrapedJob[] = []
 
       switch (board) {
-        case 'remoteok':
-          jobs = await scrapeRemoteOK(searchQuery || 'remote work', location || 'remote')
-          break
         case 'indeed':
           jobs = await scrapeIndeed(searchQuery || 'remote work', location || 'remote')
           break
-        case 'weworkremotely':
-          jobs = await scrapeWeWorkRemotely(searchQuery || 'remote work', location || 'remote')
+        case 'linkedin':
+          jobs = await scrapeLinkedIn(searchQuery || 'remote work', location || 'remote')
+          break
+        case 'glassdoor':
+          jobs = await scrapeGlassdoor(searchQuery || 'remote work', location || 'remote')
+          break
+        case 'naukri':
+          jobs = await scrapeNaukri(searchQuery || 'remote work', location || 'remote')
+          break
+        case 'monster':
+          jobs = await scrapeMonster(searchQuery || 'remote work', location || 'remote')
+          break
+        case 'simplyhired':
+          jobs = await scrapeSimplyHired(searchQuery || 'remote work', location || 'remote')
+          break
+        case 'careercloud':
+          jobs = await scrapeCareerCloud(searchQuery || 'remote work', location || 'remote')
+          break
+        case 'flexjobs':
+          jobs = await scrapeFlexJobs(searchQuery || 'remote work', location || 'remote')
+          break
+        case 'careerbuilder':
+          jobs = await scrapeCareerBuilder(searchQuery || 'remote work', location || 'remote')
+          break
+        case 'careeronestop':
+          jobs = await scrapeCareerOneStop(searchQuery || 'remote work', location || 'remote')
           break
         default:
           console.log(`Unknown job board: ${board}`)

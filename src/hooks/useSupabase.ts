@@ -405,3 +405,135 @@ export const useTriggerJobScraping = () => {
     }
   })
 }
+
+// Resume management hooks
+export const useUserResumes = () => {
+  return useQuery({
+    queryKey: ['user_resumes'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return []
+      
+      const { data, error } = await supabase
+        .from('user_resumes')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('uploaded_at', { ascending: false })
+      
+      if (error) throw error
+      return data
+    }
+  })
+}
+
+export const useActiveResume = () => {
+  return useQuery({
+    queryKey: ['active_resume'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return null
+      
+      const { data, error } = await supabase
+        .from('user_resumes')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .single()
+      
+      if (error && error.code !== 'PGRST116') throw error
+      return data
+    }
+  })
+}
+
+export const useJobApplications = () => {
+  return useQuery({
+    queryKey: ['job_applications'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return []
+      
+      const { data, error } = await supabase
+        .from('job_applications')
+        .select(`
+          *,
+          scraped_jobs (
+            title,
+            company,
+            url,
+            source
+          ),
+          user_resumes (
+            filename
+          )
+        `)
+        .eq('user_id', user.id)
+        .order('application_date', { ascending: false })
+      
+      if (error) throw error
+      return data
+    }
+  })
+}
+
+export const useApplyToJob = () => {
+  const queryClient = useQueryClient()
+  
+  return useMutation({
+    mutationFn: async ({ jobId, resumeId, notes }: {
+      jobId: string;
+      resumeId?: string;
+      notes?: string;
+    }) => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+
+      const { data, error } = await supabase
+        .from('job_applications')
+        .insert({
+          user_id: user.id,
+          job_id: jobId,
+          resume_id: resumeId,
+          notes: notes || 'Auto-applied via JJMapplyx',
+          application_status: 'submitted'
+        })
+        .select()
+        .single()
+
+      if (error) throw error
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['job_applications'] })
+      queryClient.invalidateQueries({ queryKey: ['scraped_jobs'] })
+    }
+  })
+}
+
+export const useUpdateApplicationStatus = () => {
+  const queryClient = useQueryClient()
+  
+  return useMutation({
+    mutationFn: async ({ applicationId, status, notes }: {
+      applicationId: string;
+      status: string;
+      notes?: string;
+    }) => {
+      const { data, error } = await supabase
+        .from('job_applications')
+        .update({ 
+          application_status: status,
+          notes: notes,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', applicationId)
+        .select()
+
+      if (error) throw error
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['job_applications'] })
+    }
+  })
+}

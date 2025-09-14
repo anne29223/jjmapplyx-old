@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { ExternalLink, Search, Filter, Trash2, CheckCircle, XCircle, Clock, MapPin, DollarSign, Calendar, Building, Globe } from 'lucide-react';
-import { useScrapedJobs, useUpdateScrapedJobStatus, useDeleteScrapedJob, useTriggerJobScraping, useJobScrapingConfig } from '@/hooks/useSupabase';
+import { useScrapedJobs, useUpdateScrapedJobStatus, useDeleteScrapedJob, useTriggerJobScraping, useJobScrapingConfig, useApplyToJob, useActiveResume } from '@/hooks/useSupabase';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -49,7 +49,7 @@ export const ScrapedJobsList = () => {
   const [selectedJob, setSelectedJob] = useState<ScrapedJob | null>(null);
   const [isScraping, setIsScraping] = useState(false);
   const [scrapingConfig, setScrapingConfig] = useState({
-    jobBoards: ['indeed', 'remoteok', 'weworkremotely'],
+    jobBoards: ['indeed', 'linkedin', 'glassdoor'],
     searchQuery: 'remote work',
     location: 'remote',
     maxJobs: 50
@@ -57,9 +57,11 @@ export const ScrapedJobsList = () => {
 
   const { data: jobs = [], isLoading } = useScrapedJobs();
   const { data: config } = useJobScrapingConfig();
+  const { data: activeResume } = useActiveResume();
   const { mutate: updateStatus } = useUpdateScrapedJobStatus();
   const { mutate: deleteJob } = useDeleteScrapedJob();
   const { mutate: triggerScraping } = useTriggerJobScraping();
+  const { mutate: applyToJob } = useApplyToJob();
   const { toast } = useToast();
 
   const filteredJobs = jobs.filter((job: ScrapedJob) => {
@@ -124,6 +126,37 @@ export const ScrapedJobsList = () => {
           variant: "destructive"
         });
         setIsScraping(false);
+      }
+    });
+  };
+
+  const handleApplyToJob = (jobId: string) => {
+    if (!activeResume) {
+      toast({
+        title: "No Resume Uploaded",
+        description: "Please upload your resume first before applying to jobs.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    applyToJob({
+      jobId,
+      resumeId: activeResume.id,
+      notes: `Applied via ${jobs.find((j: ScrapedJob) => j.id === jobId)?.source || 'job board'}`
+    }, {
+      onSuccess: () => {
+        toast({
+          title: "Application Submitted",
+          description: "Your application has been submitted successfully!",
+        });
+      },
+      onError: (error) => {
+        toast({
+          title: "Application Failed",
+          description: error.message || "Failed to submit application. Please try again.",
+          variant: "destructive"
+        });
       }
     });
   };
@@ -196,27 +229,38 @@ export const ScrapedJobsList = () => {
                 </div>
                 <div>
                   <label className="text-sm font-medium">Job Boards</label>
-                  <div className="space-y-2">
-                    {['indeed', 'remoteok', 'weworkremotely', 'glassdoor', 'linkedin'].map((board) => (
-                      <label key={board} className="flex items-center space-x-2">
+                  <div className="space-y-2 max-h-40 overflow-y-auto">
+                    {[
+                      { key: 'indeed', name: 'Indeed' },
+                      { key: 'linkedin', name: 'LinkedIn' },
+                      { key: 'glassdoor', name: 'Glassdoor' },
+                      { key: 'naukri', name: 'Naukri' },
+                      { key: 'monster', name: 'Monster' },
+                      { key: 'simplyhired', name: 'SimplyHired' },
+                      { key: 'careercloud', name: 'CareerCloud' },
+                      { key: 'flexjobs', name: 'FlexJobs' },
+                      { key: 'careerbuilder', name: 'CareerBuilder' },
+                      { key: 'careeronestop', name: 'CareerOneStop' }
+                    ].map((board) => (
+                      <label key={board.key} className="flex items-center space-x-2">
                         <input
                           type="checkbox"
-                          checked={scrapingConfig.jobBoards.includes(board)}
+                          checked={scrapingConfig.jobBoards.includes(board.key)}
                           onChange={(e) => {
                             if (e.target.checked) {
                               setScrapingConfig({
                                 ...scrapingConfig,
-                                jobBoards: [...scrapingConfig.jobBoards, board]
+                                jobBoards: [...scrapingConfig.jobBoards, board.key]
                               });
                             } else {
                               setScrapingConfig({
                                 ...scrapingConfig,
-                                jobBoards: scrapingConfig.jobBoards.filter(b => b !== board)
+                                jobBoards: scrapingConfig.jobBoards.filter(b => b !== board.key)
                               });
                             }
                           }}
                         />
-                        <span className="text-sm capitalize">{board}</span>
+                        <span className="text-sm">{board.name}</span>
                       </label>
                     ))}
                   </div>
@@ -339,6 +383,14 @@ export const ScrapedJobsList = () => {
                 </div>
                 
                 <div className="flex gap-1">
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={() => handleApplyToJob(job.id)}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    Apply
+                  </Button>
                   <Button
                     variant="ghost"
                     size="sm"
