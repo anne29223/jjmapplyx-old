@@ -9,6 +9,7 @@ import { TestWebhook } from "@/components/dashboard/TestWebhook";
 import { JobSiteConfig } from "@/components/dashboard/JobSiteConfig";
 import { Analytics } from "@/components/dashboard/Analytics";
 import { ExportImport } from "@/components/dashboard/ExportImport";
+import { ScrapedJobsList } from "@/components/dashboard/ScrapedJobsList";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -248,8 +249,9 @@ export const Dashboard = () => {
         </div>
 
         <Tabs defaultValue="jobs" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="jobs">Job Applications</TabsTrigger>
+            <TabsTrigger value="scraped">Scraped Jobs</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="settings">Site Config</TabsTrigger>
             <TabsTrigger value="data">Export/Import</TabsTrigger>
@@ -300,6 +302,10 @@ export const Dashboard = () => {
               <p className="text-muted-foreground">No jobs found matching your criteria.</p>
             </div>
           )}
+          </TabsContent>
+
+          <TabsContent value="scraped">
+            <ScrapedJobsList />
           </TabsContent>
 
           <TabsContent value="analytics">

@@ -244,3 +244,164 @@ export const useBulkUpsertJobSites = () => {
     }
   })
 }
+
+// Scraped Jobs hooks
+export const useScrapedJobs = () => {
+  return useQuery({
+    queryKey: ['scraped_jobs'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return []
+      
+      const { data, error } = await supabase
+        .from('scraped_jobs')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('scraped_at', { ascending: false })
+        .limit(100)
+      
+      if (error) throw error
+      return data
+    }
+  })
+}
+
+export const useScrapedJobsBySource = (source: string) => {
+  return useQuery({
+    queryKey: ['scraped_jobs', source],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return []
+      
+      const { data, error } = await supabase
+        .from('scraped_jobs')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('source', source)
+        .order('scraped_at', { ascending: false })
+        .limit(50)
+      
+      if (error) throw error
+      return data
+    }
+  })
+}
+
+export const useUpdateScrapedJobStatus = () => {
+  const queryClient = useQueryClient()
+  
+  return useMutation({
+    mutationFn: async ({ jobId, status }: { jobId: string; status: string }) => {
+      const { data, error } = await supabase
+        .from('scraped_jobs')
+        .update({ status, updated_at: new Date().toISOString() })
+        .eq('id', jobId)
+        .select()
+      
+      if (error) throw error
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['scraped_jobs'] })
+    }
+  })
+}
+
+export const useDeleteScrapedJob = () => {
+  const queryClient = useQueryClient()
+  
+  return useMutation({
+    mutationFn: async (jobId: string) => {
+      const { error } = await supabase
+        .from('scraped_jobs')
+        .delete()
+        .eq('id', jobId)
+      
+      if (error) throw error
+      return true
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['scraped_jobs'] })
+    }
+  })
+}
+
+export const useJobScrapingConfig = () => {
+  return useQuery({
+    queryKey: ['job_scraping_config'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return null
+      
+      const { data, error } = await supabase
+        .from('job_scraping_config')
+        .select('*')
+        .eq('user_id', user.id)
+        .single()
+      
+      if (error && error.code !== 'PGRST116') throw error
+      
+      return data || {
+        enabled_job_boards: ['indeed', 'remoteok', 'weworkremotely'],
+        search_queries: ['remote work', 'work from home'],
+        locations: ['remote', 'anywhere'],
+        max_jobs_per_board: 50,
+        scraping_frequency: 'daily'
+      }
+    }
+  })
+}
+
+export const useUpdateJobScrapingConfig = () => {
+  const queryClient = useQueryClient()
+  
+  return useMutation({
+    mutationFn: async (config: any) => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+
+      const { data, error } = await supabase
+        .from('job_scraping_config')
+        .upsert({
+          user_id: user.id,
+          ...config,
+          updated_at: new Date().toISOString()
+        })
+        .select()
+        .single()
+      
+      if (error) throw error
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['job_scraping_config'] })
+    }
+  })
+}
+
+export const useTriggerJobScraping = () => {
+  const queryClient = useQueryClient()
+  
+  return useMutation({
+    mutationFn: async ({ jobBoards, searchQuery, location, maxJobs }: {
+      jobBoards: string[];
+      searchQuery: string;
+      location: string;
+      maxJobs: number;
+    }) => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) throw new Error('Not authenticated')
+
+      const response = await supabase.functions.invoke('job-scraper', {
+        body: { jobBoards, searchQuery, location, maxJobs }
+      })
+
+      if (response.error) throw response.error
+      return response.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['scraped_jobs'] })
+      queryClient.invalidateQueries({ queryKey: ['automation_logs'] })
+    }
+  })
+}
