@@ -306,7 +306,7 @@ export const Dashboard = () => {
           </TabsContent>
 
           <TabsContent value="scraped">
-            <ScrapedJobsTest />
+            <ScrapedJobsList />
           </TabsContent>
 
           <TabsContent value="analytics">
