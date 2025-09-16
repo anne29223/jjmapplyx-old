@@ -269,7 +269,7 @@ export const ResumeUpload = () => {
                   Supports PDF, DOC, DOCX (max 5MB)
                 </p>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-4">
                 <Button
                   className="mt-4"
                   onClick={() => {
@@ -280,6 +280,19 @@ export const ResumeUpload = () => {
                 >
                   {isUploading ? 'Uploading...' : 'Choose File'}
                 </Button>
+                
+                {/* Direct file input - always visible for testing */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Or select file directly:</label>
+                  <Input
+                    type="file"
+                    accept=".pdf,.doc,.docx"
+                    onChange={handleFileInputChange}
+                    className="w-full"
+                    disabled={isUploading}
+                  />
+                </div>
+                
                 <Input
                   ref={fileInputRef}
                   type="file"
@@ -288,16 +301,6 @@ export const ResumeUpload = () => {
                   className="hidden"
                   id="resume-file-input"
                 />
-                {/* Debug: Visible file input for testing */}
-                <div className="text-xs text-muted-foreground">
-                  <p>Debug: Try this visible file input below:</p>
-                  <Input
-                    type="file"
-                    accept=".pdf,.doc,.docx"
-                    onChange={handleFileInputChange}
-                    className="mt-2"
-                  />
-                </div>
               </div>
             </div>
           </CardContent>
