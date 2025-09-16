@@ -11,9 +11,9 @@ import { Analytics } from "@/components/dashboard/Analytics";
 import { ExportImport } from "@/components/dashboard/ExportImport";
 import { ScrapedJobsList } from "@/components/dashboard/ScrapedJobsList";
 import { ScrapedJobsTest } from "@/components/dashboard/ScrapedJobsTest";
-import { ResumeUpload } from "@/components/dashboard/ResumeUpload";
-import { ResumeUploadTest } from "@/components/dashboard/ResumeUploadTest";
 import { SimpleUploadTest } from "@/components/dashboard/SimpleUploadTest";
+import { AuthStatus } from "@/components/dashboard/AuthStatus";
+import { DatabaseTest } from "@/components/dashboard/DatabaseTest";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -321,9 +321,9 @@ export const Dashboard = () => {
 
           <TabsContent value="resume">
             <div className="space-y-6">
+              <AuthStatus />
+              <DatabaseTest />
               <SimpleUploadTest />
-              <ResumeUploadTest />
-              <ResumeUpload />
             </div>
           </TabsContent>
 
