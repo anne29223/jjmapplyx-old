@@ -250,15 +250,21 @@ export const Dashboard = () => {
           </div>
         </div>
 
-        <Tabs defaultValue="jobs" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
-            <TabsTrigger value="jobs">Job Applications</TabsTrigger>
-            <TabsTrigger value="scraped">Scraped Jobs</TabsTrigger>
-            <TabsTrigger value="resume">Resume</TabsTrigger>
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
-            <TabsTrigger value="settings">Site Config</TabsTrigger>
-            <TabsTrigger value="data">Export/Import</TabsTrigger>
-          </TabsList>
+        <div className="space-y-6">
+          <div className="bg-blue-50 p-4 rounded-lg border">
+            <h3 className="text-lg font-semibold text-blue-800">Dashboard Tabs</h3>
+            <p className="text-blue-600">Click on any tab below to navigate between different sections:</p>
+          </div>
+          
+          <Tabs defaultValue="jobs" className="space-y-6">
+            <TabsList className="inline-flex h-10 items-center justify-start rounded-md bg-muted p-1 text-muted-foreground w-full overflow-x-auto">
+              <TabsTrigger value="jobs" className="whitespace-nowrap">Job Applications</TabsTrigger>
+              <TabsTrigger value="scraped" className="whitespace-nowrap">Scraped Jobs</TabsTrigger>
+              <TabsTrigger value="resume" className="whitespace-nowrap">Resume</TabsTrigger>
+              <TabsTrigger value="analytics" className="whitespace-nowrap">Analytics</TabsTrigger>
+              <TabsTrigger value="settings" className="whitespace-nowrap">Site Config</TabsTrigger>
+              <TabsTrigger value="data" className="whitespace-nowrap">Export/Import</TabsTrigger>
+            </TabsList>
 
           <TabsContent value="jobs" className="space-y-4">
           <div className="flex items-center justify-between">
@@ -326,7 +332,8 @@ export const Dashboard = () => {
           <TabsContent value="data">
             <ExportImport />
           </TabsContent>
-        </Tabs>
+          </Tabs>
+        </div>
       </div>
     </div>
   );
