@@ -245,24 +245,14 @@ export const ScrapedJobsList = () => {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button 
-            variant="default" 
-            onClick={() => handleDownloadJobs('json')}
-            disabled={jobs.length === 0}
-            className="bg-green-600 hover:bg-green-700"
+          <a 
+            href="/jobs.json" 
+            download="jobs.json"
+            className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
           >
             <Download className="h-4 w-4 mr-2" />
-            Download JSON
-          </Button>
-          <Button 
-            variant="default" 
-            onClick={() => handleDownloadJobs('csv')}
-            disabled={jobs.length === 0}
-            className="bg-blue-600 hover:bg-blue-700"
-          >
-            <Download className="h-4 w-4 mr-2" />
-            Download CSV
-          </Button>
+            Download Job Listings
+          </a>
           <Dialog>
             <DialogTrigger asChild>
               <Button variant="outline">

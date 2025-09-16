@@ -295,19 +295,22 @@ async function main() {
     index === self.findIndex(j => j.title === job.title && j.company === job.company)
   );
 
-  console.log(`Total unique jobs found: ${uniqueJobs.length}`);
+  // Limit to 5 jobs maximum
+  const limitedJobs = uniqueJobs.slice(0, 5);
+
+  console.log(`Total unique jobs found: ${uniqueJobs.length}, keeping max 5: ${limitedJobs.length}`);
 
   // Save to database
-  await saveJobsToDatabase(uniqueJobs);
+  await saveJobsToDatabase(limitedJobs);
 
   // Also save to JSON file for download
   const fs = require('fs');
   const path = require('path');
   
   const jsonData = {
-    jobs: uniqueJobs,
+    jobs: limitedJobs,
     metadata: {
-      totalJobs: uniqueJobs.length,
+      totalJobs: limitedJobs.length,
       scraped_at: new Date().toISOString(),
       searchQuery: SEARCH_QUERY,
       location: LOCATION,
@@ -316,9 +319,10 @@ async function main() {
     }
   };
 
-  const jsonPath = path.join(process.cwd(), 'scraped-jobs.json');
-  fs.writeFileSync(jsonPath, JSON.stringify(jsonData, null, 2));
-  console.log(`Jobs saved to ${jsonPath}`);
+  // Save to public folder for direct download
+  const publicPath = path.join(process.cwd(), 'public', 'jobs.json');
+  fs.writeFileSync(publicPath, JSON.stringify(jsonData, null, 2));
+  console.log(`Jobs saved to ${publicPath}`);
 
   console.log('Job scraping workflow completed successfully');
 }

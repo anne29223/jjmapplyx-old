@@ -30,10 +30,10 @@ jobs:
           name: all-jobs
           path: all_jobs.json
           overwrite: true
-      - name: Upload scraped jobs JSON artifact
+      - name: Upload jobs JSON artifact
         uses: actions/upload-artifact@v4
         with:
-          name: scraped-jobs-json
-          path: scraped-jobs.json
+          name: jobs-json
+          path: public/jobs.json
           overwrite: true
 
