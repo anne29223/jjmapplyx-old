@@ -12,6 +12,8 @@ import { ExportImport } from "@/components/dashboard/ExportImport";
 import { ScrapedJobsList } from "@/components/dashboard/ScrapedJobsList";
 import { ScrapedJobsTest } from "@/components/dashboard/ScrapedJobsTest";
 import { ResumeUpload } from "@/components/dashboard/ResumeUpload";
+import { ResumeUploadTest } from "@/components/dashboard/ResumeUploadTest";
+import { SimpleUploadTest } from "@/components/dashboard/SimpleUploadTest";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -318,7 +320,11 @@ export const Dashboard = () => {
           </TabsContent>
 
           <TabsContent value="resume">
-            <ResumeUpload />
+            <div className="space-y-6">
+              <SimpleUploadTest />
+              <ResumeUploadTest />
+              <ResumeUpload />
+            </div>
           </TabsContent>
 
           <TabsContent value="analytics">

@@ -60,7 +60,11 @@ export const ResumeUpload = () => {
   }, [supabase]);
 
   const handleFileSelect = async (file: File) => {
-    if (!file) return;
+    console.log('handleFileSelect called with file:', file.name, file.type, file.size);
+    if (!file) {
+      console.log('No file provided to handleFileSelect');
+      return;
+    }
 
     // Validate file type
     const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
@@ -147,9 +151,13 @@ export const ResumeUpload = () => {
     e.preventDefault();
     setDragActive(false);
     
+    console.log('File dropped:', e.dataTransfer.files);
     const files = e.dataTransfer.files;
     if (files && files[0]) {
+      console.log('File dropped:', files[0].name, files[0].type, files[0].size);
       handleFileSelect(files[0]);
+    } else {
+      console.log('No file dropped');
     }
   };
 
@@ -164,9 +172,13 @@ export const ResumeUpload = () => {
   };
 
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('File input changed:', e.target.files);
     const files = e.target.files;
     if (files && files[0]) {
+      console.log('File selected:', files[0].name, files[0].type, files[0].size);
       handleFileSelect(files[0]);
+    } else {
+      console.log('No file selected');
     }
   };
 
@@ -232,7 +244,7 @@ export const ResumeUpload = () => {
           </CardHeader>
           <CardContent>
             <div
-              className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+              className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer ${
                 dragActive
                   ? 'border-primary bg-primary/5'
                   : 'border-muted-foreground/25 hover:border-primary/50'
@@ -240,6 +252,10 @@ export const ResumeUpload = () => {
               onDrop={handleDrop}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
+              onClick={() => {
+                console.log('Drag area clicked, fileInputRef:', fileInputRef.current);
+                fileInputRef.current?.click();
+              }}
             >
               <Upload className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
               <div className="space-y-2">
@@ -253,20 +269,36 @@ export const ResumeUpload = () => {
                   Supports PDF, DOC, DOCX (max 5MB)
                 </p>
               </div>
-              <Button
-                className="mt-4"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isUploading}
-              >
-                {isUploading ? 'Uploading...' : 'Choose File'}
-              </Button>
-              <Input
-                ref={fileInputRef}
-                type="file"
-                accept=".pdf,.doc,.docx"
-                onChange={handleFileInputChange}
-                className="hidden"
-              />
+              <div className="space-y-2">
+                <Button
+                  className="mt-4"
+                  onClick={() => {
+                    console.log('Button clicked, fileInputRef:', fileInputRef.current);
+                    fileInputRef.current?.click();
+                  }}
+                  disabled={isUploading}
+                >
+                  {isUploading ? 'Uploading...' : 'Choose File'}
+                </Button>
+                <Input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".pdf,.doc,.docx"
+                  onChange={handleFileInputChange}
+                  className="hidden"
+                  id="resume-file-input"
+                />
+                {/* Debug: Visible file input for testing */}
+                <div className="text-xs text-muted-foreground">
+                  <p>Debug: Try this visible file input below:</p>
+                  <Input
+                    type="file"
+                    accept=".pdf,.doc,.docx"
+                    onChange={handleFileInputChange}
+                    className="mt-2"
+                  />
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
