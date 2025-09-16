@@ -246,17 +246,19 @@ export const ScrapedJobsList = () => {
         </div>
         <div className="flex gap-2">
           <Button 
-            variant="outline" 
+            variant="default" 
             onClick={() => handleDownloadJobs('json')}
             disabled={jobs.length === 0}
+            className="bg-green-600 hover:bg-green-700"
           >
             <Download className="h-4 w-4 mr-2" />
             Download JSON
           </Button>
           <Button 
-            variant="outline" 
+            variant="default" 
             onClick={() => handleDownloadJobs('csv')}
             disabled={jobs.length === 0}
+            className="bg-blue-600 hover:bg-blue-700"
           >
             <Download className="h-4 w-4 mr-2" />
             Download CSV

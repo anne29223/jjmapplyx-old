@@ -42,6 +42,64 @@ export const ExportImport = () => {
     });
   };
 
+  const handleDownloadScrapedJobs = async (format: 'json' | 'csv') => {
+    try {
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabase = createClient(
+        import.meta.env.VITE_SUPABASE_URL,
+        import.meta.env.VITE_SUPABASE_ANON_KEY
+      );
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          title: "Authentication Required",
+          description: "Please log in to download jobs.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/download-jobs?format=${format}&limit=1000`, {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to download jobs');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      
+      const filename = response.headers.get('Content-Disposition')?.split('filename=')[1]?.replace(/"/g, '') || 
+                     `scraped-jobs-${new Date().toISOString().split('T')[0]}.${format}`;
+      
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast({
+        title: "Download Complete",
+        description: `Scraped jobs downloaded successfully as ${format.toUpperCase()}`,
+      });
+    } catch (error) {
+      console.error('Download error:', error);
+      toast({
+        title: "Download Failed",
+        description: error instanceof Error ? error.message : "Failed to download jobs. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && file.type === 'application/json') {
@@ -113,6 +171,32 @@ export const ExportImport = () => {
             >
               <Download className="h-4 w-4" />
               Export All
+            </Button>
+          </div>
+        </div>
+
+        {/* Scraped Jobs Download Section */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-medium">Download Scraped Jobs</h3>
+          <p className="text-sm text-muted-foreground">
+            Download your scraped jobs data from the database in JSON or CSV format
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <Button 
+              variant="default" 
+              onClick={() => handleDownloadScrapedJobs('json')}
+              className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
+            >
+              <Download className="h-4 w-4" />
+              Download JSON
+            </Button>
+            <Button 
+              variant="default" 
+              onClick={() => handleDownloadScrapedJobs('csv')}
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
+            >
+              <Download className="h-4 w-4" />
+              Download CSV
             </Button>
           </div>
         </div>
