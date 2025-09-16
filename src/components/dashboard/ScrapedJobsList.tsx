@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { ExternalLink, Search, Filter, Trash2, CheckCircle, XCircle, Clock, MapPin, DollarSign, Calendar, Building, Globe } from 'lucide-react';
+import { ExternalLink, Search, Filter, Trash2, CheckCircle, XCircle, Clock, MapPin, DollarSign, Calendar, Building, Globe, Download } from 'lucide-react';
 import { useScrapedJobs, useUpdateScrapedJobStatus, useDeleteScrapedJob, useTriggerJobScraping, useJobScrapingConfig, useApplyToJob, useActiveResume } from '@/hooks/useSupabase';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
@@ -161,6 +161,64 @@ export const ScrapedJobsList = () => {
     });
   };
 
+  const handleDownloadJobs = async (format: 'json' | 'csv') => {
+    try {
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabase = createClient(
+        import.meta.env.VITE_SUPABASE_URL,
+        import.meta.env.VITE_SUPABASE_ANON_KEY
+      );
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          title: "Authentication Required",
+          description: "Please log in to download jobs.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/download-jobs?format=${format}&limit=1000`, {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to download jobs');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      
+      const filename = response.headers.get('Content-Disposition')?.split('filename=')[1]?.replace(/"/g, '') || 
+                     `scraped-jobs-${new Date().toISOString().split('T')[0]}.${format}`;
+      
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast({
+        title: "Download Complete",
+        description: `Jobs downloaded successfully as ${format.toUpperCase()}`,
+      });
+    } catch (error) {
+      console.error('Download error:', error);
+      toast({
+        title: "Download Failed",
+        description: error instanceof Error ? error.message : "Failed to download jobs. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'applied':
@@ -187,6 +245,22 @@ export const ScrapedJobsList = () => {
           </p>
         </div>
         <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            onClick={() => handleDownloadJobs('json')}
+            disabled={jobs.length === 0}
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Download JSON
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={() => handleDownloadJobs('csv')}
+            disabled={jobs.length === 0}
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Download CSV
+          </Button>
           <Dialog>
             <DialogTrigger asChild>
               <Button variant="outline">

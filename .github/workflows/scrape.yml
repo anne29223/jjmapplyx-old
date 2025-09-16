@@ -24,4 +24,16 @@ jobs:
           name: scraped-jobs
           path: jobs.json
           overwrite: true
+      - name: Upload all jobs file artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: all-jobs
+          path: all_jobs.json
+          overwrite: true
+      - name: Upload scraped jobs JSON artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: scraped-jobs-json
+          path: scraped-jobs.json
+          overwrite: true
 

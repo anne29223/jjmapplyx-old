@@ -303,6 +303,26 @@ async function main() {
   // Save to database
   await saveJobsToDatabase(uniqueJobs);
 
+  // Also save to JSON file for download
+  const fs = require('fs');
+  const path = require('path');
+  
+  const jsonData = {
+    jobs: uniqueJobs,
+    metadata: {
+      totalJobs: uniqueJobs.length,
+      scrapedAt: new Date().toISOString(),
+      searchQuery: SEARCH_QUERY,
+      location: LOCATION,
+      jobBoards: JOB_BOARDS,
+      user_id: USER_ID
+    }
+  };
+
+  const jsonPath = path.join(process.cwd(), 'scraped-jobs.json');
+  fs.writeFileSync(jsonPath, JSON.stringify(jsonData, null, 2));
+  console.log(`Jobs saved to ${jsonPath}`);
+
   console.log('Job scraping workflow completed successfully');
 }
 
