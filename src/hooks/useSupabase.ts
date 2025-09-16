@@ -6,6 +6,11 @@ const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 
 export const supabase = createClient(supabaseUrl, supabaseKey)
 
+// Export useSupabase hook for components that need direct access
+export const useSupabase = () => {
+  return { supabase }
+}
+
 export const useJobs = () => {
   return useQuery({
     queryKey: ['jobs'],
