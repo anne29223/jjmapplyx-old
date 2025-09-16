@@ -64,20 +64,32 @@ export const ScrapedJobsList = () => {
   const { mutate: applyToJob } = useApplyToJob();
   const { toast } = useToast();
 
-  // Check if jobs.json file exists
+  // Check if jobs.json file exists and load jobs from it
   const [jsonFileExists, setJsonFileExists] = useState(false);
+  const [jsonJobs, setJsonJobs] = useState([]);
   
   useEffect(() => {
     fetch('/jobs.json')
       .then(response => {
-        setJsonFileExists(response.ok);
+        if (response.ok) {
+          setJsonFileExists(true);
+          return response.json();
+        }
+        throw new Error('File not found');
+      })
+      .then(data => {
+        setJsonJobs(data.jobs || []);
       })
       .catch(() => {
         setJsonFileExists(false);
+        setJsonJobs([]);
       });
   }, []);
 
-  const filteredJobs = jobs.filter((job: ScrapedJob) => {
+  // Combine database jobs and JSON jobs
+  const allJobs = [...jobs, ...jsonJobs];
+  
+  const filteredJobs = allJobs.filter((job: ScrapedJob) => {
     const matchesSearch = job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          job.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          job.description?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -245,7 +257,7 @@ export const ScrapedJobsList = () => {
     }
   };
 
-  const sources = [...new Set(jobs.map((job: ScrapedJob) => job.source))];
+  const sources = [...new Set(allJobs.map((job: ScrapedJob) => job.source))];
 
   return (
     <div className="space-y-6">
@@ -266,6 +278,11 @@ export const ScrapedJobsList = () => {
             <Download className="h-4 w-4 mr-2" />
             Download Job Listings
           </a>
+          {jsonFileExists && (
+            <span className="text-sm text-green-600 flex items-center">
+              ✓ JSON file available ({jsonJobs.length} jobs)
+            </span>
+          )}
           <Dialog>
             <DialogTrigger asChild>
               <Button variant="outline">
