@@ -121,12 +121,11 @@ async function scrapeJobBoard(boardKey, config) {
         url: job.url,
         source: 'RemoteOK',
         user_id: USER_ID,
-        dateFound: new Date().toISOString(),
-        payRange: job.salary || 'Varies',
-        type: 'remote',
-        resumeRequired: false,
+        scraped_at: new Date().toISOString(),
+        salary: job.salary || 'Varies',
+        job_type: 'remote',
         status: 'pending',
-        notes: `Found via GitHub Actions automation from RemoteOK`
+        description: `Found via GitHub Actions automation from RemoteOK`
       }));
       console.log(`Found ${jobs.length} jobs from RemoteOK`);
       return jobs;
@@ -153,12 +152,11 @@ async function scrapeJobBoard(boardKey, config) {
           url: match[1].startsWith('/') ? `https://www.indeed.com${match[1]}` : match[1],
           source: 'Indeed',
           user_id: USER_ID,
-          dateFound: new Date().toISOString(),
-          payRange: 'Varies',
-          type: 'hourly',
-          resumeRequired: true,
+          scraped_at: new Date().toISOString(),
+          salary: 'Varies',
+          job_type: 'hourly',
           status: 'pending',
-          notes: `Found via GitHub Actions automation from Indeed`
+          description: `Found via GitHub Actions automation from Indeed`
         });
       }
       console.log(`Found ${jobs.length} jobs from Indeed`);
@@ -236,12 +234,11 @@ function parseJobBoard(boardKey, html, boardName) {
       url,
       source: boardName,
       user_id: USER_ID,
-      dateFound: new Date().toISOString(),
-      payRange,
-      type: 'hourly',
-      resumeRequired: false,
+      scraped_at: new Date().toISOString(),
+      salary: payRange,
+      job_type: 'hourly',
       status: 'pending',
-      notes: `Found via GitHub Actions automation from ${boardName}`
+      description: `Found via GitHub Actions automation from ${boardName}`
     };
 
     // Validate job data
@@ -262,7 +259,7 @@ async function saveJobsToDatabase(jobs) {
 
   try {
     const { data, error } = await supabase
-      .from('jobs')
+      .from('scraped_jobs')
       .insert(jobs);
 
     if (error) {
@@ -311,7 +308,7 @@ async function main() {
     jobs: uniqueJobs,
     metadata: {
       totalJobs: uniqueJobs.length,
-      scrapedAt: new Date().toISOString(),
+      scraped_at: new Date().toISOString(),
       searchQuery: SEARCH_QUERY,
       location: LOCATION,
       jobBoards: JOB_BOARDS,

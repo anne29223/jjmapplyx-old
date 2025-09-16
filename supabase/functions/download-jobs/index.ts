@@ -58,10 +58,10 @@ serve(async (req) => {
 
     // Fetch jobs from database
     const { data: jobs, error } = await supabaseClient
-      .from('jobs')
+      .from('scraped_jobs')
       .select('*')
       .eq('user_id', user.id)
-      .order('dateFound', { ascending: false })
+      .order('scraped_at', { ascending: false })
       .limit(limit)
 
     if (error) {
@@ -88,17 +88,17 @@ serve(async (req) => {
 
     if (format === 'csv') {
       // Convert to CSV
-      const csvHeaders = ['Title', 'Company', 'URL', 'Source', 'Pay Range', 'Type', 'Status', 'Date Found', 'Notes']
+      const csvHeaders = ['Title', 'Company', 'URL', 'Source', 'Salary', 'Job Type', 'Status', 'Scraped At', 'Description']
       const csvRows = jobs.map(job => [
         `"${(job.title || '').replace(/"/g, '""')}"`,
         `"${(job.company || '').replace(/"/g, '""')}"`,
         `"${(job.url || '').replace(/"/g, '""')}"`,
         `"${(job.source || '').replace(/"/g, '""')}"`,
-        `"${(job.payRange || '').replace(/"/g, '""')}"`,
-        `"${(job.type || '').replace(/"/g, '""')}"`,
+        `"${(job.salary || '').replace(/"/g, '""')}"`,
+        `"${(job.job_type || '').replace(/"/g, '""')}"`,
         `"${(job.status || '').replace(/"/g, '""')}"`,
-        `"${(job.dateFound || '').replace(/"/g, '""')}"`,
-        `"${(job.notes || '').replace(/"/g, '""')}"`
+        `"${(job.scraped_at || '').replace(/"/g, '""')}"`,
+        `"${(job.description || '').replace(/"/g, '""')}"`
       ])
 
       const csvContent = [
