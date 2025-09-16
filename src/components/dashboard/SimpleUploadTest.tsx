@@ -376,24 +376,30 @@ export const SimpleUploadTest = () => {
               Upload your resume in PDF or Word format. This will be used for automatic job applications.
             </p>
             
-            <input
-              type="file"
-              accept=".pdf,.doc,.docx"
-              onChange={handleFileChange}
-              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-            />
-            
-            {selectedFile && (
-              <div className="p-3 bg-gray-100 rounded">
-                <p><strong>Selected File:</strong> {selectedFile.name}</p>
-                <p><strong>Type:</strong> {selectedFile.type}</p>
-                <p><strong>Size:</strong> {selectedFile.size} bytes</p>
-              </div>
-            )}
-            
-            <Button onClick={handleUpload} disabled={!selectedFile || isUploading}>
-              {isUploading ? 'Uploading...' : 'Upload Resume'}
-            </Button>
+            <div className="space-y-3">
+              <input
+                type="file"
+                accept=".pdf,.doc,.docx"
+                onChange={handleFileChange}
+                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+              />
+              
+              {selectedFile && (
+                <div className="p-3 bg-gray-100 rounded">
+                  <p><strong>Selected File:</strong> {selectedFile.name}</p>
+                  <p><strong>Type:</strong> {selectedFile.type}</p>
+                  <p><strong>Size:</strong> {selectedFile.size} bytes</p>
+                </div>
+              )}
+              
+              <Button 
+                onClick={handleUpload} 
+                disabled={!selectedFile || isUploading}
+                className="w-full"
+              >
+                {isUploading ? 'Uploading...' : 'Upload Resume'}
+              </Button>
+            </div>
           </div>
         )}
       </CardContent>
