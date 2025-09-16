@@ -9,31 +9,27 @@ def scrape_simplyhired_jobs():
     }
     response = requests.get(url, headers=headers)
     print(f"Response status: {response.status_code}")
-    print(f"Content snippet:\n{response.content[:1000].decode('utf-8', errors='ignore')}")
+    print(response.text[:1000])
 
     soup = BeautifulSoup(response.content, "html.parser")
     jobs = []
-    for job_card in soup.find_all("div", class_="SerpJob-jobCard"):
-        title_elem = job_card.find("a", class_="SerpJob-link")
-        company_elem = job_card.find("span", class_="JobPosting-labelWithIcon")
-        location_elem = job_card.find("span", class_="JobPosting-labelWithIcon jobposting-address")
-        if not (title_elem and company_elem and location_elem):
+    for job_card in soup.find_all("div", class_="SerpJob-jobCard"):  # Verify class after inspecting page!
+        title = job_card.find("a", class_="SerpJob-link")
+        company = job_card.find("span", class_="JobPosting-labelWithIcon")
+        location = job_card.find("span", class_="JobPosting-labelWithIcon jobposting-address")
+        if not (title and company and location):
             continue
-        title = title_elem.text.strip()
-        company = company_elem.text.strip()
-        location = location_elem.text.strip()
-        link = title_elem['href']
         jobs.append({
-            "title": title,
-            "company": company,
-            "location": location,
-            "apply_link": f"https://www.simplyhired.com{link}"
+            "title": title.text.strip(),
+            "company": company.text.strip(),
+            "location": location.text.strip(),
+            "apply_link": f"https://www.simplyhired.com{title['href']}"
         })
     return jobs
 
 if __name__ == "__main__":
     jobs = scrape_simplyhired_jobs()
-    print(f"Found {len(jobs)} jobs")
+    print(f"Found {len(jobs)} jobs.")
     with open("jobs.json", "w", encoding="utf-8") as f:
-        json.dump(jobs, f, ensure_ascii=False, indent=2)
+        json.dump(jobs, f, indent=2, ensure_ascii=False)
 

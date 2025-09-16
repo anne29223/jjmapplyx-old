@@ -67,3 +67,4 @@ CREATE POLICY "Users can update their own applications" ON job_applications
 
 CREATE POLICY "Users can delete their own applications" ON job_applications
   FOR DELETE USING (auth.uid() = user_id);
+
