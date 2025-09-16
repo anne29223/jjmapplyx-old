@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -63,6 +63,19 @@ export const ScrapedJobsList = () => {
   const { mutate: triggerScraping } = useTriggerJobScraping();
   const { mutate: applyToJob } = useApplyToJob();
   const { toast } = useToast();
+
+  // Check if jobs.json file exists
+  const [jsonFileExists, setJsonFileExists] = useState(false);
+  
+  useEffect(() => {
+    fetch('/jobs.json')
+      .then(response => {
+        setJsonFileExists(response.ok);
+      })
+      .catch(() => {
+        setJsonFileExists(false);
+      });
+  }, []);
 
   const filteredJobs = jobs.filter((job: ScrapedJob) => {
     const matchesSearch = job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
