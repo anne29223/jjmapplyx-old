@@ -1,42 +1,80 @@
 {
   "jobs": [
     {
-      "title": "Software Engineer - Remote",
-      "company": "Tech Corp",
-      "url": "https://example.com/job1",
+      "title": "Senior Software Engineer",
+      "company": "TechStart Inc",
+      "url": "https://remoteok.com/remote-jobs/123456-senior-software-engineer-techstart-inc",
       "source": "RemoteOK",
-      "salary": "$80,000 - $120,000",
-      "job_type": "full-time",
+      "salary": "$120,000 - $180,000",
+      "job_type": "remote",
       "status": "pending",
-      "description": "Test job for debugging purposes"
+      "description": "Full-stack development role with modern technologies",
+      "location": "Remote",
+      "tags": "javascript, react, node.js, python",
+      "date_posted": "2024-01-15"
     },
     {
       "title": "Frontend Developer",
-      "company": "Web Solutions Inc",
-      "url": "https://example.com/job2",
+      "company": "WebFlow Solutions",
+      "url": "https://indeed.com/viewjob?jk=abc123",
       "source": "Indeed",
-      "salary": "$70,000 - $100,000",
+      "salary": "$80,000 - $120,000",
       "job_type": "full-time",
       "status": "pending",
-      "description": "Another test job for debugging"
+      "description": "Frontend Developer position at WebFlow Solutions - React Developer",
+      "location": "remote",
+      "tags": "hourly work",
+      "date_posted": "2024-01-15"
     },
     {
-      "title": "Data Analyst",
-      "company": "Analytics Co",
-      "url": "https://example.com/job3",
-      "source": "LinkedIn",
-      "salary": "$60,000 - $90,000",
-      "job_type": "contract",
+      "title": "Data Scientist",
+      "company": "AI Analytics Corp",
+      "url": "https://snagajob.com/jobs/456789",
+      "source": "Snagajob",
+      "salary": "$90,000 - $140,000",
+      "job_type": "hourly",
       "status": "pending",
-      "description": "Third test job for debugging"
+      "description": "Data Scientist position at AI Analytics Corp",
+      "location": "remote",
+      "tags": "hourly work",
+      "date_posted": "2024-01-15"
+    },
+    {
+      "title": "Product Manager",
+      "company": "StartupXYZ",
+      "url": "https://ziprecruiter.com/jobs/789012",
+      "source": "ZipRecruiter",
+      "salary": "$100,000 - $150,000",
+      "job_type": "hourly",
+      "status": "pending",
+      "description": "Product Manager position at StartupXYZ",
+      "location": "remote",
+      "tags": "hourly work",
+      "date_posted": "2024-01-15"
+    },
+    {
+      "title": "DevOps Engineer",
+      "company": "CloudTech Systems",
+      "url": "https://indeed.com/viewjob?jk=def456",
+      "source": "Indeed Flex",
+      "salary": "$110,000 - $160,000",
+      "job_type": "hourly",
+      "status": "pending",
+      "description": "DevOps Engineer position at CloudTech Systems",
+      "location": "remote",
+      "tags": "hourly work",
+      "date_posted": "2024-01-15"
     }
   ],
   "metadata": {
-    "totalJobs": 3,
+    "totalJobs": 5,
     "scraped_at": "2024-01-15T10:30:00.000Z",
-    "searchQuery": "remote work",
+    "searchQuery": "hourly work",
     "location": "remote",
-    "jobBoards": ["remoteok", "indeed", "linkedin"],
-    "user_id": "test-user"
+    "jobBoards": ["remoteok", "indeed", "snagajob", "ziprecruiter", "indeedflex"],
+    "user_id": "test-user",
+    "sources": ["RemoteOK", "Indeed", "Snagajob", "ZipRecruiter", "Indeed Flex"],
+    "salaryRanges": ["$120,000 - $180,000", "$80,000 - $120,000", "$90,000 - $140,000", "$100,000 - $150,000", "$110,000 - $160,000"],
+    "jobTypes": ["remote", "full-time", "hourly"]
   }
 }

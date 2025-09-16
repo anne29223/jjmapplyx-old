@@ -12,7 +12,7 @@ const USER_ID = process.env.USER_ID || 'default-user';
 const SEARCH_QUERY = process.env.SEARCH_QUERY || 'hourly work';
 const LOCATION = process.env.LOCATION || 'remote';
 const JOB_BOARDS = process.env.JOB_BOARDS ? process.env.JOB_BOARDS.split(',') : [
-  'snagajob', 'indeedflex', 'ziprecruiter', 'instawork', 'veryable', 'bluecrew', 'remoteok', 'indeed', 'jobrightai'
+  'remoteok', 'indeed', 'snagajob', 'ziprecruiter', 'indeedflex'
 ];
   jobrightai: {
     name: 'JobRight.ai',
@@ -122,10 +122,13 @@ async function scrapeJobBoard(boardKey, config) {
         source: 'RemoteOK',
         user_id: USER_ID,
         scraped_at: new Date().toISOString(),
-        salary: job.salary || 'Varies',
-        job_type: 'remote',
+        salary: job.salary || job.salary_min || 'Varies',
+        job_type: job.location || 'remote',
         status: 'pending',
-        description: `Found via GitHub Actions automation from RemoteOK`
+        description: job.description || `Remote position at ${job.company}`,
+        location: job.location || 'Remote',
+        tags: job.tags ? job.tags.join(', ') : '',
+        date_posted: job.date || new Date().toISOString().split('T')[0]
       }));
       console.log(`Found ${jobs.length} jobs from RemoteOK`);
       return jobs;
@@ -154,9 +157,12 @@ async function scrapeJobBoard(boardKey, config) {
           user_id: USER_ID,
           scraped_at: new Date().toISOString(),
           salary: 'Varies',
-          job_type: 'hourly',
+          job_type: 'full-time',
           status: 'pending',
-          description: `Found via GitHub Actions automation from Indeed`
+          description: `Job opportunity at ${match[3].trim()} - ${match[2].trim()}`,
+          location: LOCATION,
+          tags: SEARCH_QUERY,
+          date_posted: new Date().toISOString().split('T')[0]
         });
       }
       console.log(`Found ${jobs.length} jobs from Indeed`);
@@ -238,7 +244,10 @@ function parseJobBoard(boardKey, html, boardName) {
       salary: payRange,
       job_type: 'hourly',
       status: 'pending',
-      description: `Found via GitHub Actions automation from ${boardName}`
+      description: `${title} position at ${company}`,
+      location: LOCATION,
+      tags: SEARCH_QUERY,
+      date_posted: new Date().toISOString().split('T')[0]
     };
 
     // Validate job data
@@ -315,7 +324,10 @@ async function main() {
       searchQuery: SEARCH_QUERY,
       location: LOCATION,
       jobBoards: JOB_BOARDS,
-      user_id: USER_ID
+      user_id: USER_ID,
+      sources: [...new Set(limitedJobs.map(job => job.source))],
+      salaryRanges: [...new Set(limitedJobs.map(job => job.salary))],
+      jobTypes: [...new Set(limitedJobs.map(job => job.job_type))]
     }
   };
 
