@@ -67,6 +67,7 @@ export const ScrapedJobsList = () => {
   // Check if jobs.json file exists and load jobs from it
   const [jsonFileExists, setJsonFileExists] = useState(false);
   const [jsonJobs, setJsonJobs] = useState([]);
+  const [localJobStatuses, setLocalJobStatuses] = useState({});
   
   useEffect(() => {
     fetch('/jobs.json')
@@ -86,8 +87,11 @@ export const ScrapedJobsList = () => {
       });
   }, []);
 
-  // Combine database jobs and JSON jobs
-  const allJobs = [...jobs, ...jsonJobs];
+  // Combine database jobs and JSON jobs with local status updates
+  const allJobs = [...jobs, ...jsonJobs.map(job => ({
+    ...job,
+    status: localJobStatuses[job.id] || job.status
+  }))];
   
   const filteredJobs = allJobs.filter((job: ScrapedJob) => {
     const matchesSearch = job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -99,21 +103,37 @@ export const ScrapedJobsList = () => {
   });
 
   const handleStatusUpdate = (jobId: string, newStatus: string) => {
-    updateStatus({ jobId, status: newStatus }, {
-      onSuccess: () => {
-        toast({
-          title: "Status Updated",
-          description: "Job status has been updated successfully.",
-        });
-      },
-      onError: () => {
-        toast({
-          title: "Error",
-          description: "Failed to update job status.",
-          variant: "destructive"
-        });
-      }
-    });
+    // Check if this is a database job or JSON job
+    const isDatabaseJob = jobs.some(job => job.id === jobId);
+    
+    if (isDatabaseJob) {
+      // Update database job
+      updateStatus({ jobId, status: newStatus }, {
+        onSuccess: () => {
+          toast({
+            title: "Status Updated",
+            description: "Job status has been updated successfully.",
+          });
+        },
+        onError: () => {
+          toast({
+            title: "Error",
+            description: "Failed to update job status.",
+            variant: "destructive"
+          });
+        }
+      });
+    } else {
+      // Update local JSON job status
+      setLocalJobStatuses(prev => ({
+        ...prev,
+        [jobId]: newStatus
+      }));
+      toast({
+        title: "Status Updated",
+        description: "Job status has been updated locally.",
+      });
+    }
   };
 
   const handleDeleteJob = (jobId: string) => {

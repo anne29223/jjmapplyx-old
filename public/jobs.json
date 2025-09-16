@@ -1,6 +1,7 @@
 {
   "jobs": [
     {
+      "id": "remoteok-1",
       "title": "Senior Software Engineer",
       "company": "TechStart Inc",
       "url": "https://remoteok.com/remote-jobs/123456-senior-software-engineer-techstart-inc",
@@ -14,6 +15,7 @@
       "date_posted": "2024-01-15"
     },
     {
+      "id": "indeed-1",
       "title": "Frontend Developer",
       "company": "WebFlow Solutions",
       "url": "https://indeed.com/viewjob?jk=abc123",
@@ -27,6 +29,7 @@
       "date_posted": "2024-01-15"
     },
     {
+      "id": "snagajob-1",
       "title": "Data Scientist",
       "company": "AI Analytics Corp",
       "url": "https://snagajob.com/jobs/456789",
@@ -40,6 +43,7 @@
       "date_posted": "2024-01-15"
     },
     {
+      "id": "ziprecruiter-1",
       "title": "Product Manager",
       "company": "StartupXYZ",
       "url": "https://ziprecruiter.com/jobs/789012",
@@ -53,6 +57,7 @@
       "date_posted": "2024-01-15"
     },
     {
+      "id": "indeedflex-1",
       "title": "DevOps Engineer",
       "company": "CloudTech Systems",
       "url": "https://indeed.com/viewjob?jk=def456",
