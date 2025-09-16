@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,6 +26,38 @@ export const ResumeUpload = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { supabase } = useSupabase();
+
+  // Load existing active resume on component mount
+  useEffect(() => {
+    const loadActiveResume = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { data, error } = await supabase
+          .from('user_resumes')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('is_active', true)
+          .order('uploaded_at', { ascending: false })
+          .limit(1)
+          .single();
+
+        if (error && error.code !== 'PGRST116') {
+          console.error('Error loading resume:', error);
+          return;
+        }
+
+        if (data) {
+          setResume(data);
+        }
+      } catch (error) {
+        console.error('Error loading resume:', error);
+      }
+    };
+
+    loadActiveResume();
+  }, [supabase]);
 
   const handleFileSelect = async (file: File) => {
     if (!file) return;
@@ -60,10 +92,23 @@ export const ResumeUpload = () => {
         const content = e.target?.result as string;
         const base64Content = content.split(',')[1]; // Remove data:application/pdf;base64, prefix
 
+        // Get current user
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          throw new Error('User not authenticated');
+        }
+
+        // Deactivate all existing resumes first
+        await supabase
+          .from('user_resumes')
+          .update({ is_active: false })
+          .eq('user_id', user.id);
+
         // Save to database
         const { data, error } = await supabase
           .from('user_resumes')
-          .upsert({
+          .insert({
+            user_id: user.id,
             filename: file.name,
             content: base64Content,
             file_type: file.type,
@@ -129,10 +174,16 @@ export const ResumeUpload = () => {
     if (!resume?.id) return;
 
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
       const { error } = await supabase
         .from('user_resumes')
         .delete()
-        .eq('id', resume.id);
+        .eq('id', resume.id)
+        .eq('user_id', user.id);
 
       if (error) throw error;
 
