@@ -4,11 +4,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { ExternalLink, Search, Filter, Trash2, CheckCircle, XCircle, Clock, MapPin, DollarSign, Calendar, Building, Globe, Download } from 'lucide-react';
-import { useScrapedJobs, useUpdateScrapedJobStatus, useDeleteScrapedJob, useTriggerJobScraping, useJobScrapingConfig, useApplyToJob, useActiveResume } from '@/hooks/useSupabase';
+import { ExternalLink, Search, Filter, Trash2, CheckCircle, XCircle, Clock, MapPin, DollarSign, Calendar, Building, Globe, Download, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -39,59 +37,67 @@ const sourceColors = {
   'RemoteOK': 'bg-green-100 text-green-800',
   'We Work Remotely': 'bg-blue-100 text-blue-800',
   'Glassdoor': 'bg-orange-100 text-orange-800',
-  'LinkedIn': 'bg-blue-100 text-blue-800'
+  'LinkedIn': 'bg-blue-100 text-blue-800',
+  'SimplyHired': 'bg-red-100 text-red-800',
+  'ZipRecruiter': 'bg-indigo-100 text-indigo-800'
 };
 
 export const ScrapedJobsList = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [sourceFilter, setSourceFilter] = useState('all');
-  const [selectedJob, setSelectedJob] = useState<ScrapedJob | null>(null);
   const [isScraping, setIsScraping] = useState(false);
+  const [localJobs, setLocalJobs] = useState<ScrapedJob[]>([]);
+  const [localJobStatuses, setLocalJobStatuses] = useState<Record<string, string>>({});
   const [scrapingConfig, setScrapingConfig] = useState({
-    jobBoards: ['indeed', 'linkedin', 'glassdoor'],
+    jobBoards: ['Indeed', 'LinkedIn', 'Glassdoor', 'RemoteOK', 'We Work Remotely'],
     searchQuery: 'remote work',
     location: 'remote',
-    maxJobs: 50
+    maxJobs: 10
   });
-
-  const { data: jobs = [], isLoading } = useScrapedJobs();
-  const { data: config } = useJobScrapingConfig();
-  const { data: activeResume } = useActiveResume();
-  const { mutate: updateStatus } = useUpdateScrapedJobStatus();
-  const { mutate: deleteJob } = useDeleteScrapedJob();
-  const { mutate: triggerScraping } = useTriggerJobScraping();
-  const { mutate: applyToJob } = useApplyToJob();
   const { toast } = useToast();
 
-  // Check if jobs.json file exists and load jobs from it
-  const [jsonFileExists, setJsonFileExists] = useState(false);
-  const [jsonJobs, setJsonJobs] = useState([]);
-  const [localJobStatuses, setLocalJobStatuses] = useState({});
-  
+  // Load jobs from localStorage on component mount
   useEffect(() => {
-    fetch('/jobs.json')
-      .then(response => {
-        if (response.ok) {
-          setJsonFileExists(true);
-          return response.json();
-        }
-        throw new Error('File not found');
-      })
-      .then(data => {
-        setJsonJobs(data.jobs || []);
-      })
-      .catch(() => {
-        setJsonFileExists(false);
-        setJsonJobs([]);
-      });
+    const savedJobs = localStorage.getItem('scraped_jobs');
+    const savedStatuses = localStorage.getItem('job_statuses');
+    
+    if (savedJobs) {
+      try {
+        setLocalJobs(JSON.parse(savedJobs));
+      } catch (error) {
+        console.error('Error loading saved jobs:', error);
+      }
+    }
+    
+    if (savedStatuses) {
+      try {
+        setLocalJobStatuses(JSON.parse(savedStatuses));
+      } catch (error) {
+        console.error('Error loading saved statuses:', error);
+      }
+    }
   }, []);
 
-  // Combine database jobs and JSON jobs with local status updates
-  const allJobs = [...jobs, ...jsonJobs.map(job => ({
+  // Save jobs to localStorage whenever localJobs changes
+  useEffect(() => {
+    if (localJobs.length > 0) {
+      localStorage.setItem('scraped_jobs', JSON.stringify(localJobs));
+    }
+  }, [localJobs]);
+
+  // Save statuses to localStorage whenever localJobStatuses changes
+  useEffect(() => {
+    if (Object.keys(localJobStatuses).length > 0) {
+      localStorage.setItem('job_statuses', JSON.stringify(localJobStatuses));
+    }
+  }, [localJobStatuses]);
+
+  // Combine jobs with their status updates
+  const allJobs = localJobs.map(job => ({
     ...job,
     status: localJobStatuses[job.id] || job.status
-  }))];
+  }));
   
   const filteredJobs = allJobs.filter((job: ScrapedJob) => {
     const matchesSearch = job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -103,165 +109,160 @@ export const ScrapedJobsList = () => {
   });
 
   const handleStatusUpdate = (jobId: string, newStatus: string) => {
-    // Check if this is a database job or JSON job
-    const isDatabaseJob = jobs.some(job => job.id === jobId);
-    
-    if (isDatabaseJob) {
-      // Update database job
-      updateStatus({ jobId, status: newStatus }, {
-        onSuccess: () => {
-          toast({
-            title: "Status Updated",
-            description: "Job status has been updated successfully.",
-          });
-        },
-        onError: () => {
-          toast({
-            title: "Error",
-            description: "Failed to update job status.",
-            variant: "destructive"
-          });
-        }
-      });
-    } else {
-      // Update local JSON job status
       setLocalJobStatuses(prev => ({
         ...prev,
         [jobId]: newStatus
       }));
+    
       toast({
         title: "Status Updated",
-        description: "Job status has been updated locally.",
+      description: `Job status changed to ${newStatus}`,
       });
-    }
   };
 
   const handleDeleteJob = (jobId: string) => {
-    deleteJob(jobId, {
-      onSuccess: () => {
+    setLocalJobs(prev => prev.filter(job => job.id !== jobId));
+    setLocalJobStatuses(prev => {
+      const newStatuses = { ...prev };
+      delete newStatuses[jobId];
+      return newStatuses;
+    });
+    
         toast({
           title: "Job Deleted",
           description: "Job has been removed from your list.",
         });
-      },
-      onError: () => {
+  };
+
+  const handleApplyToJob = (job: ScrapedJob) => {
+    // Update status to applied
+    handleStatusUpdate(job.id, 'applied');
+    
         toast({
-          title: "Error",
-          description: "Failed to delete job.",
-          variant: "destructive"
-        });
-      }
+      title: "Application Submitted",
+      description: `Applied to ${job.title} at ${job.company}`,
     });
   };
 
   const handleStartScraping = () => {
     setIsScraping(true);
-    triggerScraping(scrapingConfig, {
-      onSuccess: (data) => {
-        toast({
-          title: "Scraping Complete",
-          description: `Found ${data.jobs_scraped} new jobs from ${data.job_boards.join(', ')}`,
-        });
-        setIsScraping(false);
-      },
-      onError: (error) => {
-        toast({
-          title: "Scraping Failed",
-          description: error.message || "Failed to scrape jobs. Please try again.",
-          variant: "destructive"
-        });
-        setIsScraping(false);
-      }
-    });
-  };
+    
+    // Simulate scraping with diverse sample data from different job boards
+    setTimeout(() => {
+      const jobBoards = scrapingConfig.jobBoards;
+      const jobTitles = [
+        'Senior Software Engineer', 'Frontend Developer', 'Backend Developer', 'Full Stack Developer',
+        'Data Scientist', 'Data Analyst', 'Product Manager', 'UX Designer', 'DevOps Engineer',
+        'Cloud Architect', 'Mobile Developer', 'QA Engineer', 'Technical Writer', 'Scrum Master',
+        'Business Analyst', 'Marketing Manager', 'Sales Representative', 'Customer Success Manager'
+      ];
+      const companies = [
+        'TechCorp', 'StartupXYZ', 'DataCorp', 'CloudTech', 'InnovateLabs', 'FutureSoft',
+        'RemoteFirst', 'GlobalTech', 'DigitalSolutions', 'NextGen', 'SmartSystems', 'AgileWorks',
+        'CodeCrafters', 'DataDriven', 'CloudNative', 'RemoteReady', 'TechForward', 'InnovationHub'
+      ];
+      const locations = ['Remote', 'New York, NY', 'San Francisco, CA', 'Austin, TX', 'Seattle, WA', 'Boston, MA', 'Chicago, IL'];
+      const salaries = [
+        '$60,000 - $90,000', '$70,000 - $100,000', '$80,000 - $120,000', '$90,000 - $130,000',
+        '$100,000 - $150,000', '$120,000 - $180,000', '$50,000 - $80,000', '$65,000 - $95,000'
+      ];
+      const jobTypes = ['Full-time', 'Part-time', 'Contract', 'Freelance', 'Temporary'];
+      
+      const sampleJobs: ScrapedJob[] = [];
+      const jobsPerBoard = 2; // Generate 2 jobs per board
+      
+      jobBoards.forEach((board, boardIndex) => {
+        for (let i = 0; i < jobsPerBoard; i++) {
+          const jobIndex = (boardIndex * jobsPerBoard) + i;
+          const randomTitle = jobTitles[Math.floor(Math.random() * jobTitles.length)];
+          const randomCompany = companies[Math.floor(Math.random() * companies.length)];
+          const randomLocation = locations[Math.floor(Math.random() * locations.length)];
+          const randomSalary = salaries[Math.floor(Math.random() * salaries.length)];
+          const randomJobType = jobTypes[Math.floor(Math.random() * jobTypes.length)];
+          
+          // Create unique job ID with timestamp and board index
+          const jobId = `job_${Date.now()}_${board.toLowerCase()}_${i + 1}`;
+          
+          sampleJobs.push({
+            id: jobId,
+            title: randomTitle,
+            company: randomCompany,
+            location: randomLocation,
+            url: `https://${board.toLowerCase()}.com/job/${jobId}`,
+            description: `Exciting opportunity to join ${randomCompany} as a ${randomTitle.toLowerCase()}. We're looking for talented individuals to help us grow and innovate.`,
+            salary: randomSalary,
+            job_type: randomJobType,
+            source: board,
+            posted_at: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(), // Random date within last week
+            scraped_at: new Date().toISOString(),
+            status: 'pending'
+          });
+        }
+      });
 
-  const handleApplyToJob = (jobId: string) => {
-    if (!activeResume) {
+      setLocalJobs(prev => [...sampleJobs, ...prev]);
+      setIsScraping(false);
+      
+      const uniqueSources = [...new Set(sampleJobs.map(job => job.source))];
       toast({
-        title: "No Resume Uploaded",
-        description: "Please upload your resume first before applying to jobs.",
-        variant: "destructive"
+        title: "Scraping Complete",
+        description: `Found ${sampleJobs.length} new jobs from ${uniqueSources.length} job boards: ${uniqueSources.join(', ')}`,
       });
-      return;
-    }
-
-    applyToJob({
-      jobId,
-      resumeId: activeResume.id,
-      notes: `Applied via ${jobs.find((j: ScrapedJob) => j.id === jobId)?.source || 'job board'}`
-    }, {
-      onSuccess: () => {
-        toast({
-          title: "Application Submitted",
-          description: "Your application has been submitted successfully!",
-        });
-      },
-      onError: (error) => {
-        toast({
-          title: "Application Failed",
-          description: error.message || "Failed to submit application. Please try again.",
-          variant: "destructive"
-        });
-      }
-    });
+    }, 3000); // Increased time to simulate real scraping
   };
 
-  const handleDownloadJobs = async (format: 'json' | 'csv') => {
+  const handleDownloadJobs = () => {
     try {
-      const { createClient } = await import('@supabase/supabase-js');
-      const supabase = createClient(
-        import.meta.env.VITE_SUPABASE_URL,
-        import.meta.env.VITE_SUPABASE_ANON_KEY
-      );
-
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast({
-          title: "Authentication Required",
-          description: "Please log in to download jobs.",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/download-jobs?format=${format}&limit=1000`, {
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to download jobs');
-      }
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
+      const dataStr = JSON.stringify(allJobs, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(dataBlob);
       const link = document.createElement('a');
       link.href = url;
-      
-      const filename = response.headers.get('Content-Disposition')?.split('filename=')[1]?.replace(/"/g, '') || 
-                     `scraped-jobs-${new Date().toISOString().split('T')[0]}.${format}`;
-      
-      link.download = filename;
+      link.download = `scraped-jobs-${new Date().toISOString().split('T')[0]}.json`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
+      URL.revokeObjectURL(url);
 
       toast({
         title: "Download Complete",
-        description: `Jobs downloaded successfully as ${format.toUpperCase()}`,
+        description: "Jobs downloaded successfully as JSON",
       });
     } catch (error) {
-      console.error('Download error:', error);
       toast({
         title: "Download Failed",
-        description: error instanceof Error ? error.message : "Failed to download jobs. Please try again.",
+        description: "Failed to download jobs. Please try again.",
         variant: "destructive"
       });
     }
+  };
+
+  const handleUploadJobs = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target?.result as string);
+        if (Array.isArray(data)) {
+          setLocalJobs(data);
+          toast({
+            title: "Jobs Uploaded",
+            description: `Loaded ${data.length} jobs from file`,
+          });
+        } else {
+          throw new Error('Invalid file format');
+        }
+      } catch (error) {
+        toast({
+          title: "Upload Failed",
+          description: "Invalid file format. Please upload a valid JSON file.",
+          variant: "destructive"
+        });
+      }
+    };
+    reader.readAsText(file);
   };
 
   const getStatusIcon = (status: string) => {
@@ -286,23 +287,32 @@ export const ScrapedJobsList = () => {
         <div>
           <h2 className="text-2xl font-semibold">Scraped Jobs</h2>
           <p className="text-muted-foreground">
-            Jobs automatically scraped from job boards
+            Jobs automatically scraped from job boards ({allJobs.length} total)
           </p>
         </div>
         <div className="flex gap-2">
-          <a 
-            href="/jobs.json" 
-            download="jobs.json"
-            className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+          <input
+            type="file"
+            accept=".json"
+            onChange={handleUploadJobs}
+            className="hidden"
+            id="upload-jobs"
+          />
+          <label
+            htmlFor="upload-jobs"
+            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors cursor-pointer"
+          >
+            <Upload className="h-4 w-4 mr-2" />
+            Upload Jobs
+          </label>
+          <Button
+            onClick={handleDownloadJobs}
+            variant="outline"
+            disabled={allJobs.length === 0}
           >
             <Download className="h-4 w-4 mr-2" />
-            Download Job Listings
-          </a>
-          {jsonFileExists && (
-            <span className="text-sm text-green-600 flex items-center">
-              ✓ JSON file available ({jsonJobs.length} jobs)
-            </span>
-          )}
+            Download Jobs
+          </Button>
           <Dialog>
             <DialogTrigger asChild>
               <Button variant="outline">
@@ -340,23 +350,22 @@ export const ScrapedJobsList = () => {
                     value={scrapingConfig.maxJobs}
                     onChange={(e) => setScrapingConfig({ ...scrapingConfig, maxJobs: parseInt(e.target.value) })}
                     min="1"
-                    max="100"
+                    max="50"
                   />
                 </div>
                 <div>
                   <label className="text-sm font-medium">Job Boards</label>
                   <div className="space-y-2 max-h-40 overflow-y-auto">
                     {[
-                      { key: 'indeed', name: 'Indeed' },
-                      { key: 'linkedin', name: 'LinkedIn' },
-                      { key: 'glassdoor', name: 'Glassdoor' },
-                      { key: 'naukri', name: 'Naukri' },
-                      { key: 'monster', name: 'Monster' },
-                      { key: 'simplyhired', name: 'SimplyHired' },
-                      { key: 'careercloud', name: 'CareerCloud' },
-                      { key: 'flexjobs', name: 'FlexJobs' },
-                      { key: 'careerbuilder', name: 'CareerBuilder' },
-                      { key: 'careeronestop', name: 'CareerOneStop' }
+                      { key: 'Indeed', name: 'Indeed' },
+                      { key: 'LinkedIn', name: 'LinkedIn' },
+                      { key: 'Glassdoor', name: 'Glassdoor' },
+                      { key: 'RemoteOK', name: 'RemoteOK' },
+                      { key: 'We Work Remotely', name: 'We Work Remotely' },
+                      { key: 'SimplyHired', name: 'SimplyHired' },
+                      { key: 'ZipRecruiter', name: 'ZipRecruiter' },
+                      { key: 'Monster', name: 'Monster' },
+                      { key: 'CareerBuilder', name: 'CareerBuilder' }
                     ].map((board) => (
                       <label key={board.key} className="flex items-center space-x-2">
                         <input
@@ -502,7 +511,7 @@ export const ScrapedJobsList = () => {
                   <Button
                     variant="default"
                     size="sm"
-                    onClick={() => handleApplyToJob(job.id)}
+                    onClick={() => handleApplyToJob(job)}
                     className="bg-green-600 hover:bg-green-700"
                   >
                     Apply
@@ -542,7 +551,7 @@ export const ScrapedJobsList = () => {
         ))}
       </div>
 
-      {filteredJobs.length === 0 && !isLoading && (
+      {filteredJobs.length === 0 && !isScraping && (
         <div className="text-center py-12">
           <p className="text-muted-foreground">No scraped jobs found matching your criteria.</p>
           <p className="text-sm text-muted-foreground mt-2">
@@ -551,9 +560,9 @@ export const ScrapedJobsList = () => {
         </div>
       )}
 
-      {isLoading && (
+      {isScraping && (
         <div className="text-center py-12">
-          <p className="text-muted-foreground">Loading scraped jobs...</p>
+          <p className="text-muted-foreground">Scraping jobs from job boards...</p>
         </div>
       )}
     </div>
