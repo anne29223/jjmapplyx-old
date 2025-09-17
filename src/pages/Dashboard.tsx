@@ -16,6 +16,7 @@ import { SimpleUpload } from "@/components/dashboard/SimpleUpload";
 import { AuthStatus } from "@/components/dashboard/AuthStatus";
 import { DatabaseTest } from "@/components/dashboard/DatabaseTest";
 import { SimpleTest } from "@/components/dashboard/SimpleTest";
+import { DebugTest } from "@/components/dashboard/DebugTest";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -323,8 +324,7 @@ export const Dashboard = () => {
 
           <TabsContent value="resume">
             <div className="space-y-6">
-              <SimpleTest />
-              <SimpleUpload />
+              <DebugTest />
             </div>
           </TabsContent>
 
