@@ -97,6 +97,9 @@ export const DebugTest = () => {
           addResult(`📋 Error details: ${JSON.stringify(error)}`);
         } else {
           addResult(`📋 Table accessible, found ${data?.length || 0} records`);
+          if (data?.length === 0) {
+            addResult(`✅ Table is empty - this is normal for a new setup`);
+          }
         }
       } catch (tableError) {
         addResult(`📋 Table exception: ${tableError.message}`);
@@ -210,15 +213,17 @@ export const DebugTest = () => {
           const { data, error } = await supabase
             .from('user_resumes')
             .insert(resumeData)
-            .select()
-            .single();
+            .select();
           
           if (error) {
             addResult(`❌ Insert failed: ${error.message}`);
             addResult(`❌ Error details: ${JSON.stringify(error, null, 2)}`);
+          } else if (data && data.length > 0) {
+            addResult(`✅ Insert successful! ID: ${data[0].id}`);
+            setUploadedResume(data[0]);
           } else {
-            addResult(`✅ Insert successful! ID: ${data.id}`);
-            setUploadedResume(data);
+            addResult(`❌ Insert failed: No data returned`);
+            addResult(`🔍 Data received: ${JSON.stringify(data)}`);
           }
           
         } catch (innerError) {
@@ -312,26 +317,48 @@ export const DebugTest = () => {
           
           addResult('💾 Saving to database...');
           
+          // First check if table exists
+          addResult('🔍 Checking if table exists...');
+          const { data: tableCheck, error: tableError } = await supabase
+            .from('user_resumes')
+            .select('id')
+            .limit(1);
+          
+          if (tableError) {
+            addResult(`❌ Table check failed: ${tableError.message}`);
+            addResult(`❌ Error code: ${tableError.code}`);
+            addResult(`❌ This means the user_resumes table doesn't exist or is not accessible`);
+            addResult(`📝 Please run the migration: supabase/migrations/004_user_resumes.sql`);
+            return;
+          }
+          
+          addResult('✅ Table exists and is accessible');
+          
           const { data, error } = await supabase
             .from('user_resumes')
             .insert(resumeData)
-            .select()
-            .single();
+            .select();
           
           console.log('Database insert result:', { data, error });
+          addResult(`🔍 Database response: data=${data ? 'present' : 'null'}, error=${error ? 'present' : 'null'}`);
           
           if (error) {
             addResult(`❌ Upload failed: ${error.message || 'Unknown error'}`);
             addResult(`❌ Error code: ${error.code || 'No code'}`);
             addResult(`❌ Error details: ${JSON.stringify(error, null, 2)}`);
             addResult(`❌ Full error object: ${JSON.stringify(error)}`);
-          } else {
-            addResult(`✅ Upload successful! ID: ${data.id}`);
-            setUploadedResume(data);
+            console.error('Database insert error:', error);
+          } else if (data && data.length > 0) {
+            addResult(`✅ Upload successful! ID: ${data[0].id}`);
+            setUploadedResume(data[0]);
             setSelectedFile(null);
             // Clear file input
             const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
             if (fileInput) fileInput.value = '';
+          } else {
+            addResult(`❌ Upload failed: No data returned and no error`);
+            addResult(`❌ This suggests a database connection issue`);
+            addResult(`🔍 Data received: ${JSON.stringify(data)}`);
           }
           
         } catch (innerError) {
@@ -359,12 +386,12 @@ export const DebugTest = () => {
     setResults([]);
     
     try {
-      addResult('🔨 Attempting to create user_resumes table...');
+      addResult('🔨 Checking user_resumes table setup...');
       
-      // This is a simplified approach - in reality, you'd need to run the SQL migration
-      addResult('⚠️ Note: Table creation requires SQL migration');
-      addResult('📝 Please run the migration from supabase/migrations/004_user_resumes.sql');
-      addResult('🔗 Or create the table manually in Supabase dashboard');
+      // Check if there are policy conflicts
+      addResult('⚠️ If you see policy conflicts, run the fix script');
+      addResult('📝 Use the fix_user_resumes_table.sql script I created');
+      addResult('🔗 Copy the SQL from fix_user_resumes_table.sql and run it in Supabase SQL Editor');
       
       // Try to insert a test record to see what happens
       addResult('🧪 Testing with minimal data...');
@@ -373,6 +400,20 @@ export const DebugTest = () => {
       if (!user) {
         addResult('❌ No user for table test');
         return;
+      }
+      
+      // First, let's check what columns exist in the table
+      addResult('🔍 Checking table structure...');
+      const { data: structureData, error: structureError } = await supabase
+        .from('user_resumes')
+        .select('*')
+        .limit(0);
+      
+      if (structureError) {
+        addResult(`❌ Structure check failed: ${structureError.message}`);
+      } else {
+        addResult(`✅ Table structure accessible`);
+        addResult(`🎉 Database is ready for resume uploads!`);
       }
       
       const testData = {
@@ -388,18 +429,20 @@ export const DebugTest = () => {
       const { data, error } = await supabase
         .from('user_resumes')
         .insert(testData)
-        .select()
-        .single();
+        .select();
       
       if (error) {
         addResult(`❌ Insert test failed: ${error.message}`);
         addResult(`❌ Error code: ${error.code}`);
         addResult(`❌ This suggests the table structure is wrong or missing`);
-      } else {
+      } else if (data && data.length > 0) {
         addResult(`✅ Insert test successful! Table exists and works`);
         // Clean up test record
-        await supabase.from('user_resumes').delete().eq('id', data.id);
+        await supabase.from('user_resumes').delete().eq('id', data[0].id);
         addResult('🧹 Cleaned up test record');
+      } else {
+        addResult(`❌ Insert test failed: No data returned`);
+        addResult(`🔍 Data received: ${JSON.stringify(data)}`);
       }
       
     } catch (error) {
