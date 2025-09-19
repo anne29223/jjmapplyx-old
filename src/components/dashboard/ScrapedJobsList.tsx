@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { ExternalLink, Search, Filter, Trash2, CheckCircle, XCircle, Clock, MapPin, DollarSign, Calendar, Building, Globe, Download, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from 'date-fns';
 
 interface ScrapedJob {
@@ -108,16 +109,46 @@ export const ScrapedJobsList = () => {
     return matchesSearch && matchesStatus && matchesSource;
   });
 
-  const handleStatusUpdate = (jobId: string, newStatus: string) => {
+  const handleStatusUpdate = async (jobId: string, newStatus: string) => {
+    try {
+      // Update local state immediately for better UX
       setLocalJobStatuses(prev => ({
         ...prev,
         [jobId]: newStatus
       }));
-    
+      
+      // Persist to database (using jobs table since scraped_jobs isn't in types)
+      const { error } = await supabase
+        .from('jobs')
+        .update({ status: newStatus })
+        .eq('id', jobId);
+        
+      if (error) {
+        console.error('Error updating job status:', error);
+        // Revert local state on error
+        setLocalJobStatuses(prev => {
+          const newState = { ...prev };
+          delete newState[jobId];
+          return newState;
+        });
+        toast({
+          title: "Error",
+          description: "Failed to update job status. Please try again.",
+        });
+        return;
+      }
+      
       toast({
         title: "Status Updated",
-      description: `Job status changed to ${newStatus}`,
+        description: `Job status changed to ${newStatus}`,
       });
+    } catch (error) {
+      console.error('Error updating job status:', error);
+      toast({
+        title: "Error", 
+        description: "Failed to update job status. Please try again.",
+      });
+    }
   };
 
   const handleDeleteJob = (jobId: string) => {

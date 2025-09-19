@@ -248,7 +248,7 @@ const JOB_BOARD_CONFIGS: Record<string, JobBoardConfig> = {
 };
 
 export class JobScraperService {
-  private browser: puppeteer.Browser | null = null;
+  private browser: any | null = null;
 
   async initialize() {
     if (!this.browser) {
@@ -309,7 +309,7 @@ export class JobScraperService {
       searchUrl.searchParams.set('l', location);
       
       await page.goto(searchUrl.toString(), { waitUntil: 'networkidle2' });
-      await page.waitForTimeout(2000);
+      await page.waitForLoadState('networkidle');
 
       while (jobs.length < maxJobs && currentPage <= maxPages) {
         console.log(`Scraping page ${currentPage} of ${config.name}`);
@@ -374,7 +374,7 @@ export class JobScraperService {
           const nextPageExists = await page.$(config.pagination.nextPage);
           if (nextPageExists) {
             await page.click(config.pagination.nextPage);
-            await page.waitForTimeout(3000);
+            await page.waitForLoadState('networkidle');
             currentPage++;
           } else {
             break;
