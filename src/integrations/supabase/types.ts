@@ -78,7 +78,7 @@ export type Database = {
           id: string
           metadata: Json | null
           status: string
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           action: string
@@ -87,7 +87,7 @@ export type Database = {
           id?: string
           metadata?: Json | null
           status?: string
-          user_id?: string | null
+          user_id: string
         }
         Update: {
           action?: string
@@ -96,7 +96,7 @@ export type Database = {
           id?: string
           metadata?: Json | null
           status?: string
-          user_id?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -111,7 +111,7 @@ export type Database = {
           success_rate: number | null
           total_jobs: number | null
           updated_at: string
-          user_id: string | null
+          user_id: string
           webhooks_triggered: number | null
         }
         Insert: {
@@ -124,7 +124,7 @@ export type Database = {
           success_rate?: number | null
           total_jobs?: number | null
           updated_at?: string
-          user_id?: string | null
+          user_id: string
           webhooks_triggered?: number | null
         }
         Update: {
@@ -137,7 +137,7 @@ export type Database = {
           success_rate?: number | null
           total_jobs?: number | null
           updated_at?: string
-          user_id?: string | null
+          user_id?: string
           webhooks_triggered?: number | null
         }
         Relationships: []
@@ -314,7 +314,7 @@ export type Database = {
           title: string
           updated_at: string | null
           url: string
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           company: string
@@ -331,7 +331,7 @@ export type Database = {
           title: string
           updated_at?: string | null
           url: string
-          user_id?: string | null
+          user_id: string
         }
         Update: {
           company?: string
@@ -348,7 +348,7 @@ export type Database = {
           title?: string
           updated_at?: string | null
           url?: string
-          user_id?: string | null
+          user_id?: string
         }
         Relationships: []
       }

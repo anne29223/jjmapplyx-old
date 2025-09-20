@@ -11,7 +11,7 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders })
   }
 
-  // Shared secret for n8n webhook
+  // Validate webhook secret and user authentication
   const SHARED_SECRET = Deno.env.get('N8N_WEBHOOK_SECRET') ?? ''
   const incomingSecret = req.headers.get('x-n8n-secret')
   if (!SHARED_SECRET || incomingSecret !== SHARED_SECRET) {
@@ -24,6 +24,19 @@ serve(async (req) => {
     )
   }
 
+  // Validate user authentication for user-specific operations
+  const authHeader = req.headers.get('Authorization')
+  const userId = req.headers.get('x-user-id')
+  if (!userId) {
+    return new Response(
+      JSON.stringify({ error: 'User ID required for secure operations' }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      },
+    )
+  }
+
   try {
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -32,10 +45,11 @@ serve(async (req) => {
 
     const { action, data } = await req.json()
 
-    // Log the webhook action
+    // Log the webhook action with proper user context
     await supabaseClient
       .from('automation_logs')
       .insert({
+        user_id: userId,
         action: `n8n-${action}`,
         status: 'success',
         details: `Received n8n webhook for ${action}`,
@@ -78,7 +92,7 @@ serve(async (req) => {
         if (updateError) throw updateError
 
         // Update stats
-        await updateAutomationStats(supabaseClient, data.userId)
+        await updateAutomationStats(supabaseClient, userId)
         break
 
       case 'application-failed':

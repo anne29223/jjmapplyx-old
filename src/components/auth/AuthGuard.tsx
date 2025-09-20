@@ -42,12 +42,24 @@ export const AuthGuard = ({ children }: AuthGuardProps) => {
     setIsLoading(true);
 
     try {
+      const redirectUrl = `${window.location.origin}/`;
       const { error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          emailRedirectTo: redirectUrl
+        }
       });
 
-      if (error) throw error;
+      if (error) {
+        if (error.message.includes('User already registered')) {
+          throw new Error('An account with this email already exists. Please sign in instead.');
+        } else if (error.message.includes('Password should be')) {
+          throw new Error('Password must be at least 6 characters long.');
+        } else {
+          throw error;
+        }
+      }
 
       toast({
         title: "Success!",
@@ -74,7 +86,15 @@ export const AuthGuard = ({ children }: AuthGuardProps) => {
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        if (error.message.includes('Invalid login credentials')) {
+          throw new Error('Invalid email or password. Please check your credentials and try again.');
+        } else if (error.message.includes('Email not confirmed')) {
+          throw new Error('Please check your email and click the confirmation link before signing in.');
+        } else {
+          throw error;
+        }
+      }
 
       toast({
         title: "Welcome back!",
