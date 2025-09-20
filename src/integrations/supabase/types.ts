@@ -7,13 +7,69 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.12 (cd3cf9e)"
   }
   public: {
     Tables: {
+      applications: {
+        Row: {
+          applied_at: string
+          company: string | null
+          contact: string | null
+          created_at: string
+          id: string
+          interview_date: string | null
+          job_id: string
+          job_title: string | null
+          name: string | null
+          shift_info: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          applied_at?: string
+          company?: string | null
+          contact?: string | null
+          created_at?: string
+          id?: string
+          interview_date?: string | null
+          job_id: string
+          job_title?: string | null
+          name?: string | null
+          shift_info?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          applied_at?: string
+          company?: string | null
+          contact?: string | null
+          created_at?: string
+          id?: string
+          interview_date?: string | null
+          job_id?: string
+          job_title?: string | null
+          name?: string | null
+          shift_info?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "applications_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       automation_logs: {
         Row: {
           action: string
@@ -83,6 +139,45 @@ export type Database = {
           updated_at?: string
           user_id?: string | null
           webhooks_triggered?: number | null
+        }
+        Relationships: []
+      }
+      job_scraping_config: {
+        Row: {
+          created_at: string | null
+          enabled_job_boards: string[] | null
+          id: string
+          last_scraped_at: string | null
+          locations: string[] | null
+          max_jobs_per_board: number | null
+          scraping_frequency: string | null
+          search_queries: string[] | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          enabled_job_boards?: string[] | null
+          id?: string
+          last_scraped_at?: string | null
+          locations?: string[] | null
+          max_jobs_per_board?: number | null
+          scraping_frequency?: string | null
+          search_queries?: string[] | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          enabled_job_boards?: string[] | null
+          id?: string
+          last_scraped_at?: string | null
+          locations?: string[] | null
+          max_jobs_per_board?: number | null
+          scraping_frequency?: string | null
+          search_queries?: string[] | null
+          updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -203,6 +298,60 @@ export type Database = {
         }
         Relationships: []
       }
+      scraped_jobs: {
+        Row: {
+          company: string
+          created_at: string | null
+          description: string | null
+          id: string
+          job_type: string | null
+          location: string | null
+          posted_at: string | null
+          salary: string | null
+          scraped_at: string | null
+          source: string
+          status: string | null
+          title: string
+          updated_at: string | null
+          url: string
+          user_id: string | null
+        }
+        Insert: {
+          company: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          job_type?: string | null
+          location?: string | null
+          posted_at?: string | null
+          salary?: string | null
+          scraped_at?: string | null
+          source: string
+          status?: string | null
+          title: string
+          updated_at?: string | null
+          url: string
+          user_id?: string | null
+        }
+        Update: {
+          company?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          job_type?: string | null
+          location?: string | null
+          posted_at?: string | null
+          salary?: string | null
+          scraped_at?: string | null
+          source?: string
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+          url?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       security_logs: {
         Row: {
           action: string
@@ -235,6 +384,45 @@ export type Database = {
           resource?: string | null
           success?: boolean
           user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      user_resumes: {
+        Row: {
+          content: string
+          created_at: string | null
+          file_size: number
+          file_type: string
+          filename: string
+          id: string
+          is_active: boolean | null
+          updated_at: string | null
+          uploaded_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          file_size: number
+          file_type: string
+          filename: string
+          id?: string
+          is_active?: boolean | null
+          updated_at?: string | null
+          uploaded_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          file_size?: number
+          file_type?: string
+          filename?: string
+          id?: string
+          is_active?: boolean | null
+          updated_at?: string | null
+          uploaded_at?: string | null
           user_id?: string | null
         }
         Relationships: []
@@ -316,20 +504,20 @@ export type Database = {
       }
       has_role: {
         Args: {
-          _user_id: string
           _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
         }
         Returns: boolean
       }
       log_security_event: {
         Args: {
-          _user_id: string
           _action: string
-          _resource?: string
-          _ip_address?: unknown
-          _user_agent?: string
-          _success?: boolean
           _details?: Json
+          _ip_address?: unknown
+          _resource?: string
+          _success?: boolean
+          _user_agent?: string
+          _user_id: string
         }
         Returns: undefined
       }
