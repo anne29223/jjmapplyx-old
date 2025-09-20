@@ -110,22 +110,34 @@ export const ScrapedJobsList = () => {
   });
 
   const handleStatusUpdate = async (jobId: string, newStatus: string) => {
+    // Update local state immediately for better UX
+    setLocalJobStatuses(prev => ({
+      ...prev,
+      [jobId]: newStatus
+    }));
+    
+    // Check if this is a mock job (generated locally) or a real scraped job
+    const isMockJob = jobId.startsWith('job_');
+    
+    if (isMockJob) {
+      // For mock jobs, only update localStorage (no database update needed)
+      toast({
+        title: "Status Updated",
+        description: `Job status changed to ${newStatus} (local only)`,
+      });
+      return;
+    }
+    
+    // For real scraped jobs, try to update the database
     try {
-      // Update local state immediately for better UX
-      setLocalJobStatuses(prev => ({
-        ...prev,
-        [jobId]: newStatus
-      }));
-      
-      // Persist to database - update the scraped_jobs table
       const { error } = await supabase
         .from('scraped_jobs' as any)
         .update({ status: newStatus })
         .eq('id', jobId);
         
       if (error) {
-        console.error('Error updating job status:', error);
-        // Revert local state on error
+        console.error('Error updating job status in database:', error);
+        // Revert local state on database error
         setLocalJobStatuses(prev => {
           const newState = { ...prev };
           delete newState[jobId];
@@ -133,7 +145,7 @@ export const ScrapedJobsList = () => {
         });
         toast({
           title: "Error",
-          description: "Failed to update job status. Please try again.",
+          description: "Failed to update job status in database. Please try again.",
         });
         return;
       }
@@ -144,6 +156,12 @@ export const ScrapedJobsList = () => {
       });
     } catch (error) {
       console.error('Error updating job status:', error);
+      // Revert local state on error
+      setLocalJobStatuses(prev => {
+        const newState = { ...prev };
+        delete newState[jobId];
+        return newState;
+      });
       toast({
         title: "Error", 
         description: "Failed to update job status. Please try again.",
