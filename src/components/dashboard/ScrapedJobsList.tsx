@@ -117,9 +117,9 @@ export const ScrapedJobsList = () => {
         [jobId]: newStatus
       }));
       
-      // Persist to database (using jobs table since scraped_jobs isn't in types)
+      // Persist to database - update the scraped_jobs table
       const { error } = await supabase
-        .from('jobs')
+        .from('scraped_jobs' as any)
         .update({ status: newStatus })
         .eq('id', jobId);
         
